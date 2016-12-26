@@ -1,0 +1,21 @@
+{
+    "name": "sip_server",
+    "version": "0.0.1",
+    "scripts": {
+        "start": "node index.js",
+        "test": "mocha --reporter spec"
+    },
+    "repository": {
+        "type": "git",
+        "url": ""
+    },
+    "dependencies": {
+        "log4js": "latest",
+        "ip": "latest",
+        "node-uuid": "latest",
+        "sails-disk": "^0.10.10",
+        "sip": "latest",
+        "caching": "*",
+        "waterline": "^0.11.6"
+    }
+}
