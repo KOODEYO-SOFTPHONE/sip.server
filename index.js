@@ -7,6 +7,8 @@ var getUsers = function(param, cb) {
 };
 var fs = require('fs');
 
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
 module.exports.getUsers = getUsers;
 
 function SipServer() {
@@ -316,13 +318,16 @@ function SipServer() {
             }
         };
 
-        //if ( ("tls" in sipServer) && ("key" in sipServer.tls) && sipServer.tls.key
-        //    && ("crt" in sipServer.tls) && sipServer.tls.crt ) {
-        options['tls'] = {
-            key: fs.readFileSync(__dirname + '/' + 'server_localhost.key'),
-            cert: fs.readFileSync(__dirname + '/' + 'server_localhost.crt')
-        };
-        //}
+        // Подключение сертификата
+        var keyPath = __dirname + '/' + 'server_localhost.key';
+        var crtPath = __dirname + '/' + 'server_localhost.crt';
+
+        if (fs.existsSync(keyPath) && fs.existsSync(crtPath)) {
+            options['tls'] = {
+                key: fs.readFileSync(keyPath),
+                cert: fs.readFileSync(crtPath)
+            };
+        }
 
         proxy.start(options, onRequest); // end proxy.start ...
 
