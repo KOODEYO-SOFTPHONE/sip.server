@@ -27,7 +27,7 @@ function SipServer() {
     var util = require('./util');
 
     var _port = 5062; // порты по умолчанию для SIP сервера, если не придёт из модуля _config 
-    var _ws_port;
+    var _ws_port = 5062;
 
     sip._registry = {}; // сюда будем писать абонентов из базы
     sip._contacts = new(require('./cache')); // объект для хранения реально подключившихся пользователей, а не всех зарегистрированных
@@ -285,7 +285,7 @@ function SipServer() {
         //logger.trace(Array.isArray(sip._registry));
 
         //var sip._contacts = {}; // объект для хранения реально подключившихся пользователей, а не всех зарегистрированных
-        sip._realm = require("ip").address();
+        sip._realm = require('ip').address();
         logger.info('starting server ...');
         logger.info('SIP порт: ' + _port);
 
