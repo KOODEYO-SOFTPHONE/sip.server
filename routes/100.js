@@ -12,10 +12,6 @@ var log4js = require('log4js');
 log4js.configure('./logger.json', { reloadSecs: 300 });
 var logger = log4js.getLogger('sip_server');
 
-var getUsers = function(param, cb) {
-    cb('Error connect to database', {});
-};
-
 // rinstance - for multi contacts
 //{"uri":"sip:122@172.17.2.82:60452;rinstance=fdbedfe4930e59d7"}
 //{"uri":"sip:3@172.17.2.82:7169","params":{"+sip.instance":"\"<urn:uuid:399BFBC0-5F5E-A6E8-AAAC-64FBEF2792C8>\""}}
@@ -39,15 +35,7 @@ module.exports = function(self, rq, flow, cb) {
     }
     var user = sip.parseUri(rq.headers.to.uri).user;
 
-    //self.app.request('dbstorage.Users', {name:user}, function (err, data) {
-    /*
-    data = {
-        user: '6',
-        password: '6'
-    };
-    */
-
-    getUsers({ name: user }, function(err, data) {
+    module.parent.exports.getUsers({ name: user }, function(err, data) {
         if (!(isGuest(user) || (data && data.password))) { // we don't know this user and answer with a challenge to hide this fact 
             var rs = digest.challenge({ realm: sip._realm }, sip.makeResponse(rq, 401, 'Authentication Required'));
             proxy.send(rs);
@@ -102,102 +90,5 @@ module.exports = function(self, rq, flow, cb) {
             sip._contacts.get(sip._sessionPrefix + user + rinstance, auth);
         }
     });
-    return true;
-};
-
-function _dbstorage() {
-    console.log('dbStorage function');
-    logger.debug('dbstorage runs...');
-
-    //////////////////////////////////////////////////////////////////
-    // WATERLINE Storage
-    //////////////////////////////////////////////////////////////////
-
-    var Waterline = require('waterline');
-    var orm = new Waterline();
-
-    //////////////////////////////////////////////////////////////////
-    // WATERLINE CONFIG
-    //////////////////////////////////////////////////////////////////
-
-    // Require any waterline compatible adapters here
-    var diskAdapter = require('sails-disk');
-
-    // Build A Config Object
-    var config = {
-
-        // Setup Adapters
-        // Creates named adapters that have been required
-        adapters: {
-            'default': diskAdapter,
-            disk: diskAdapter
-        },
-
-        // Build Connections Config
-        // Setup connections using the named adapter configs
-        connections: {
-            myLocalDisk: {
-                adapter: 'disk'
-            }
-        },
-        defaults: {
-            migrate: 'alter'
-        }
-    };
-
-    //////////////////////////////////////////////////////////////////
-    // WATERLINE MODELS
-    //////////////////////////////////////////////////////////////////
-
-    var Users = Waterline.Collection.extend({
-        identity: 'users',
-        connection: 'myLocalDisk',
-        attributes: {
-            name: 'string',
-            password: 'string'
-        }
-    });
-
-    // Load the Models into the ORM
-    orm.loadCollection(Users);
-
-    var models;
-
-    // Start Waterline passing adapters in
-    orm.initialize(config, function(err, mod) {
-        if (err) throw err;
-        models = mod;
-    });
-
-
-
-    getUsers = function(param, cb) {
-        logger.debug('dbstorage.Users requested: ' + JSON.stringify(param));
-
-        if (models) {
-            models.collections.users.findOne(param, function(err, data) {
-                if (err) return cb(err, {});
-                cb(null, data);
-            });
-        } else {
-            cb('Error connect to database', {});
-        }
-    };
-
-    /*
-    self.app.onRequest('dbstorage.Users', function(param, cb) {
-        logger.debug('dbstorage.Users requested: ' + JSON.stringify(param));
-
-        if (models) {
-            models.collections.users.findOne(param, function(err, data) {
-                if (err) return cb(err, {});
-                cb(null, data);
-            });
-        } else {
-            cb('Error connect to database', {});
-        }
-    });
-    */
+    return true
 }
-
-_dbstorage();

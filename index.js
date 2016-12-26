@@ -1,6 +1,13 @@
 var log4js = require('log4js');
 log4js.configure('./logger.json', { reloadSecs: 300 });
 var logger = log4js.getLogger('sip_server');
+var sip_server = require('events').EventEmitter;
+var getUsers = function(param, cb) {
+    cb('Error connect to database', {});
+};
+var fs = require('fs');
+
+module.exports.getUsers = getUsers;
 
 function SipServer() {
     logger.debug('SipServer start');
@@ -283,10 +290,11 @@ function SipServer() {
         _ws_port ? logger.info('WebSocket started on port: ' + _ws_port) :
             logger.info('WebSocket doesn\'t connect');
 
-        proxy.start({
+        var options = {
             port: _port,
             ws_port: _ws_port,
             ws_path: '/sip',
+
             logger: {
                 recv: function(msg, remote) {
                     logger.info('RECV from ' + remote.protocol + ' ' + remote.address + ':' + remote.port + '\n' + sip.stringify(msg), 'sip');
@@ -306,7 +314,17 @@ function SipServer() {
                     logger.error(e.stack, 'sip');
                 }
             }
-        }, onRequest); // end proxy.start ...
+        };
+
+        //if ( ("tls" in sipServer) && ("key" in sipServer.tls) && sipServer.tls.key
+        //    && ("crt" in sipServer.tls) && sipServer.tls.crt ) {
+        options['tls'] = {
+            key: fs.readFileSync(__dirname + '/' + 'server_localhost.key'),
+            cert: fs.readFileSync(__dirname + '/' + 'server_localhost.crt')
+        };
+        //}
+
+        proxy.start(options, onRequest); // end proxy.start ...
 
         sip._port = _port;
 
@@ -324,3 +342,84 @@ function SipServer() {
 module.exports = SipServer;
 
 SipServer();
+
+function waterlineStorage() {
+    console.log('dbStorage function');
+    logger.debug('dbstorage runs...');
+
+    //////////////////////////////////////////////////////////////////
+    // WATERLINE Storage
+    //////////////////////////////////////////////////////////////////
+
+    var Waterline = require('waterline');
+    var orm = new Waterline();
+
+    //////////////////////////////////////////////////////////////////
+    // WATERLINE CONFIG
+    //////////////////////////////////////////////////////////////////
+
+    // Require any waterline compatible adapters here
+    var diskAdapter = require('sails-disk');
+
+    // Build A Config Object
+    var config = {
+
+        // Setup Adapters
+        // Creates named adapters that have been required
+        adapters: {
+            'default': diskAdapter,
+            disk: diskAdapter
+        },
+
+        // Build Connections Config
+        // Setup connections using the named adapter configs
+        connections: {
+            myLocalDisk: {
+                adapter: 'disk'
+            }
+        },
+        defaults: {
+            migrate: 'alter'
+        }
+    };
+
+    //////////////////////////////////////////////////////////////////
+    // WATERLINE MODELS
+    //////////////////////////////////////////////////////////////////
+
+    var Users = Waterline.Collection.extend({
+        identity: 'users',
+        connection: 'myLocalDisk',
+        attributes: {
+            name: 'string',
+            password: 'string'
+        }
+    });
+
+    // Load the Models into the ORM
+    orm.loadCollection(Users);
+
+    var models;
+
+    // Start Waterline passing adapters in
+    orm.initialize(config, function(err, mod) {
+        if (err) throw err;
+        models = mod;
+    });
+
+    module.exports.getUsers = function(param, cb) {
+        logger.debug('dbstorage.Users requested: ' + JSON.stringify(param));
+
+        if (models) {
+            models.collections.users.findOne(param, function(err, data) {
+                if (err) return cb(err, {});
+                cb(null, data);
+            });
+        } else {
+            cb('Error connect to database', {});
+        }
+    };
+
+}
+
+waterlineStorage();
