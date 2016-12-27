@@ -1,15 +1,17 @@
+'use strict';
+
 var sip = require('sip');
 var proxy = require('sip/proxy');
 
 sip._dialogs = {};
-sip._dialogID = function (rq) {
+sip._dialogID = function(rq) {
     return rq.headers['call-id'];
     //return [rq.headers['call-id'], rq.headers.to.params.tag, rq.headers.from.params.tag].join(':');
     //??? on BYE 'to' and 'from' tags change places
 };
 
 // маршрутизация через шлюзы (используется sip._dialogs)
-module.exports = function (self, rq, flow, cb) {
+module.exports = function(self, rq, flow, cb) {
 
     // check if it's an in dialog request
     if (!rq.headers.to.params.tag)
@@ -31,9 +33,9 @@ module.exports = function (self, rq, flow, cb) {
         rq.headers.route.shift();
 
     function work(err, fromContact) {
-        proxy.send(rq, function (rs) {
+        proxy.send(rq, function(rs) {
 
-            rs.headers.via.shift();//defaultCallback
+            rs.headers.via.shift(); //defaultCallback
 
             proxy.send(rs);
 

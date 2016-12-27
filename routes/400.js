@@ -1,15 +1,17 @@
+'use strict';
+
 var sip = require('sip');
 var proxy = require('sip/proxy');
 
 // правила набора номера
 sip._did = [
-    {gatewayID: 1, regexp: '^0(\\d+)$'},
-    {gatewayID: 1, regexp: '^(7\\d{10})$'},
-    {gatewayID: 3, regexp: '^(\\w{3,})$'}
+    { gatewayID: 1, regexp: '^0(\\d+)$' },
+    { gatewayID: 1, regexp: '^(7\\d{10})$' },
+    { gatewayID: 3, regexp: '^(\\w{3,})$' }
 ];
 
 // звонок через шлюз
-module.exports = function (self, rq, flow, cb) {
+module.exports = function(self, rq, flow, cb) {
 
     var user = sip.parseUri(rq.uri).user;
     var host = sip.parseUri(rq.uri).host;
@@ -27,7 +29,7 @@ module.exports = function (self, rq, flow, cb) {
         var gatewayID;
 
         if (sip._did && sip._did.length)
-            sip._did.some(function (did) {
+            sip._did.some(function(did) {
                 var regex = new RegExp(did.regexp);
                 if (regex.test(user)) {
                     user = user.replace(regex, '$1');
@@ -45,7 +47,7 @@ module.exports = function (self, rq, flow, cb) {
                 sip._gateways &&
                 sip._gateways.status &&
                 (_gateways = sip._gateways.status[gatewayID])
-                ))
+            ))
             return cb(false);
         cb(true);
 
@@ -68,12 +70,12 @@ module.exports = function (self, rq, flow, cb) {
             rq.headers.contact[0].uri = 'sip:' + _gateways.user + '@' + host + ':' + port;
         }
         //rq.headers.via.shift();
-        proxy.send(rq, function (rs) {
+        proxy.send(rq, function(rs) {
 
             if (rs.headers.via[0].params &&
-                    rs.headers.via[0].params.received &&
-                    rs.headers.via[0].host !== rs.headers.via[0].params.received &&
-                    host !== rs.headers.via[0].params.received) {
+                rs.headers.via[0].params.received &&
+                rs.headers.via[0].host !== rs.headers.via[0].params.received &&
+                host !== rs.headers.via[0].params.received) {
                 host = rs.headers.via[0].params.received;
                 if (rs.headers.via[0].params.rport)
                     port = rs.headers.via[0].params.rport;
@@ -88,23 +90,24 @@ module.exports = function (self, rq, flow, cb) {
                 //console.log(rs);
                 if (rs.headers.contact) {
                     if (rs.status == 200 &&
-                            rs.headers.cseq.method == 'INVITE') {
+                        rs.headers.cseq.method == 'INVITE') {
 
                         var contacts = {};
                         contacts[rq.headers.from.uri] = contact_from;
                         contacts[to_uri] = rs.headers.contact[0].uri;
-                        sip._dialogs[sip._dialogID(rs)] = {contacts: contacts};
+                        sip._dialogs[sip._dialogID(rs)] = { contacts: contacts };
 
                         //for correct routing requests
                         if (rs.headers['record-route']) {
-                            (rs.headers['record-route']).push(
-                                    {uri: {
-                                            schema: 'sip',
-                                            host: sip._realm,
-                                            port: sip._port,
-                                            params: {lr: null},
-                                            headers: {}}
-                                    });
+                            (rs.headers['record-route']).push({
+                                uri: {
+                                    schema: 'sip',
+                                    host: sip._realm,
+                                    port: sip._port,
+                                    params: { lr: null },
+                                    headers: {}
+                                }
+                            });
 
                         }
                     }
@@ -126,14 +129,12 @@ module.exports = function (self, rq, flow, cb) {
                 if (rq.headers.contact) {
                     //in case if detect public ip:port
                     rq.headers.contact[0].uri = 'sip:' + sip.parseUri(rq.headers.contact[0].uri).user + '@' + host + ':' + port;
-                }
-                ;
-                proxy.send(rq, function (_rs) {
+                };
+                proxy.send(rq, function(_rs) {
                     _rs.headers.via.shift();
                     sendRes(_rs);
                 });
-            }
-            else
+            } else
                 sendRes(rs);
         });
     }

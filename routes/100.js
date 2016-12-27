@@ -1,3 +1,5 @@
+'use strict';
+
 var sip = require('sip');
 var proxy = require('sip/proxy');
 var digest = require('sip/digest');
@@ -28,6 +30,8 @@ module.exports = function(self, rq, flow, cb) {
     if (rq.method !== 'REGISTER')
         return cb(false);
     cb(true);
+
+    module.parent.exports.SipServer.emit('REGISTER', rq);
 
     function isGuest(user) {
         //return /^guest/.test(user); 

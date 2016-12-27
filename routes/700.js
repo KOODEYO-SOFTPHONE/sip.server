@@ -1,10 +1,12 @@
+'use strict';
+
 var sip = require('sip');
 var proxy = require('sip/proxy');
 
 var app; // объявляется объект app для вывода и отправки сообщений
 var self; // объявляется объект self для логгирования по разным уровням
 
-sip._maskContact = function (realUri, maskUri) {
+sip._maskContact = function(realUri, maskUri) {
     if (!realUri)
         return maskUri;
     var parts = realUri.split(';');
@@ -15,18 +17,17 @@ sip._maskContact = function (realUri, maskUri) {
     return realUri;
 }
 
-sip._detail = function (rq) {
-    var from = sip.parseUri(rq.headers.from.uri).user;//+'@'+sip.parseUri(rq.headers.from.uri).host+':'+(sip.parseUri(rq.headers.from.uri).port*1 || 5060);
-    var to = sip.parseUri(rq.headers.to.uri).user;//+'@'+sip.parseUri(rq.headers.to.uri).host+':'+(sip.parseUri(rq.headers.to.uri).port*1 || 5060);
-    var res =
-            {
-                method: rq.method ? rq.method : rq.headers.cseq.method,
-                type: rq.method ? 'request' : 'response',
-                //from: rq.method ? from : to,
-                //to: rq.method ? to : from,
-                call_id: rq.headers['call-id'],
-                time: Date.now()
-            };
+sip._detail = function(rq) {
+    var from = sip.parseUri(rq.headers.from.uri).user; //+'@'+sip.parseUri(rq.headers.from.uri).host+':'+(sip.parseUri(rq.headers.from.uri).port*1 || 5060);
+    var to = sip.parseUri(rq.headers.to.uri).user; //+'@'+sip.parseUri(rq.headers.to.uri).host+':'+(sip.parseUri(rq.headers.to.uri).port*1 || 5060);
+    var res = {
+        method: rq.method ? rq.method : rq.headers.cseq.method,
+        type: rq.method ? 'request' : 'response',
+        //from: rq.method ? from : to,
+        //to: rq.method ? to : from,
+        call_id: rq.headers['call-id'],
+        time: Date.now()
+    };
     if (rq.status && rq.reason) {
         res.status = rq.status;
         res.reason = rq.reason;
@@ -41,7 +42,7 @@ sip._detail = function (rq) {
     return res;
 };
 
-module.exports = function (_self, rq, flow, cb) {
+module.exports = function(_self, rq, flow, cb) {
     //основная обработка внутренних запросов
     self = _self;
     app = self.app;
@@ -59,17 +60,14 @@ module.exports = function (_self, rq, flow, cb) {
                 var flow_uri = sip.encodeFlowUri(flow);
                 flow_uri.params.lr = null;
                 rq.headers.route = contact.route.concat(rq.headers.route || []);
-                rq.headers['record-route'] = [{uri: flow_uri}].concat(contact.route, rq.headers['record-route'] || []);
-            }
-            else
+                rq.headers['record-route'] = [{ uri: flow_uri }].concat(contact.route, rq.headers['record-route'] || []);
+            } else
             if (rq.headers.route) {
                 var furi = sip.encodeFlowUri(flow);
                 if (rq.headers.route[0].hostname == furi.hostname && rq.headers.route[0].user == furi.user)
                     rq.headers.route.shift();
             }
-        }
-        else
-        {
+        } else {
             if (rq.headers.route) {
                 var furi = sip.encodeFlowUri(flow);
                 if (rq.headers.route[0].hostname == furi.hostname)
@@ -79,8 +77,8 @@ module.exports = function (_self, rq, flow, cb) {
             rq.uri = contact.contact.uri;
         }
 
-	//jssip incorrect uri hack
-        if (flow.protocol && flow.protocol.toUpperCase() == 'WS' && (rq.method=='ACK' || rq.method=='BYE'))
+        //jssip incorrect uri hack
+        if (flow.protocol && flow.protocol.toUpperCase() == 'WS' && (rq.method == 'ACK' || rq.method == 'BYE'))
             rq.uri = rq.headers.to.uri;
 
         //преобразование контактов запроса
@@ -88,12 +86,12 @@ module.exports = function (_self, rq, flow, cb) {
             rq.headers.contact[0].uri = sip._maskContact(rq.headers.contact[0].uri, rq.headers.from.uri);
         self.app.emit('callEvent', sip._detail(rq));
 
-        proxy.send(rq, function (rs) {
+        proxy.send(rq, function(rs) {
             //преобразование контактов ответа
             if (rs.headers.contact)
                 rs.headers.contact[0].uri = sip._maskContact(rs.headers.contact[0].uri, rs.headers.from.uri);
 
-            rs.headers.via.shift();//defaultCallback
+            rs.headers.via.shift(); //defaultCallback
 
             if (rs.status == 180 || rs.status >= 200)
                 self.app.emit('callEvent', sip._detail(rs));
