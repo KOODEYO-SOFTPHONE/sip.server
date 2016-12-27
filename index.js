@@ -11,6 +11,10 @@ var getUsers = function(param, cb) {
 };
 var fs = require('fs');
 
+module.exports = {
+    getUsers: getUsers
+};
+
 class SipServer extends eventEmitter {
     constructor() {
         super();
@@ -343,13 +347,32 @@ class SipServer extends eventEmitter {
     }
 }
 
-module.exports = {
-    getUsers: getUsers
-};
+var sipServer = new SipServer();
+module.exports.SipServer = sipServer;
 
-var sipServer = module.exports.SipServer = new SipServer();
+sipServer.on('INVITE', (data) => {
+    console.log('!!!!!!!!!!!!!! ON INVITE ', data);
+});
+sipServer.on('ACK', (data) => {
+    console.log('!!!!!!!!!!!!!! ON ACK ', data);
+});
+sipServer.on('CANCEL', (data) => {
+    console.log('!!!!!!!!!!!!!! ON CANCEL ', data);
+});
+sipServer.on('BYE', (data) => {
+    console.log('!!!!!!!!!!!!!! ON BYE ', data);
+});
+sipServer.on('INFO', (data) => {
+    console.log('!!!!!!!!!!!!!! ON INFO ', data);
+});
+sipServer.on('MESSAGE', (data) => {
+    console.log('!!!!!!!!!!!!!! ON MESSAGE ', data);
+});
+sipServer.on('UPDATE', (data) => {
+    console.log('!!!!!!!!!!!!!! ON UPDATE ', data);
+});
 sipServer.on('REGISTER', (data) => {
-    console.log('ON REGISTER ', data);
+    console.log('!!!!!!!!!!!!!! ON REGISTER ', data);
 });
 
 function waterlineStorage() {

@@ -31,7 +31,7 @@ module.exports = function(self, rq, flow, cb) {
         return cb(false);
     cb(true);
 
-    module.parent.exports.SipServer.emit('REGISTER', rq);
+    //module.parent.exports.SipServer.emit('REGISTER', rq);
 
     function isGuest(user) {
         //return /^guest/.test(user); 
