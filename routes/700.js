@@ -1,16 +1,16 @@
 'use strict';
 
-var sip = require('sip');
-var proxy = require('sip/proxy');
+let sip = require('sip');
+let proxy = require('sip/proxy');
 
-var app; // объявляется объект app для вывода и отправки сообщений
-var self; // объявляется объект self для логгирования по разным уровням
+let app; // объявляется объект app для вывода и отправки сообщений
+let self; // объявляется объект self для логгирования по разным уровням
 
 sip._maskContact = function(realUri, maskUri) {
     if (!realUri)
         return maskUri;
-    var parts = realUri.split(';');
-    var _uri = '';
+    let parts = realUri.split(';');
+    let _uri = '';
     if (parts[1])
         _uri = realUri.replace(parts[0], '');
     realUri = maskUri + _uri;
@@ -18,9 +18,9 @@ sip._maskContact = function(realUri, maskUri) {
 }
 
 sip._detail = function(rq) {
-    var from = sip.parseUri(rq.headers.from.uri).user; //+'@'+sip.parseUri(rq.headers.from.uri).host+':'+(sip.parseUri(rq.headers.from.uri).port*1 || 5060);
-    var to = sip.parseUri(rq.headers.to.uri).user; //+'@'+sip.parseUri(rq.headers.to.uri).host+':'+(sip.parseUri(rq.headers.to.uri).port*1 || 5060);
-    var res = {
+    let from = sip.parseUri(rq.headers.from.uri).user; //+'@'+sip.parseUri(rq.headers.from.uri).host+':'+(sip.parseUri(rq.headers.from.uri).port*1 || 5060);
+    let to = sip.parseUri(rq.headers.to.uri).user; //+'@'+sip.parseUri(rq.headers.to.uri).host+':'+(sip.parseUri(rq.headers.to.uri).port*1 || 5060);
+    let res = {
         method: rq.method ? rq.method : rq.headers.cseq.method,
         type: rq.method ? 'request' : 'response',
         //from: rq.method ? from : to,
@@ -47,29 +47,29 @@ module.exports = function(_self, rq, flow, cb) {
     self = _self;
     app = self.app;
 
-    var user = sip.parseUri(rq.headers.to.uri).user;
+    let user = sip.parseUri(rq.headers.to.uri).user;
 
     function work(err, contact) {
         rq._toContacts = contact;
         if (!contact)
             return cb(false);
         cb(true);
-        var contact = contact[0];
+        contact = contact[0];
         if (contact.ob) {
             if (!rq.headers.to.params.tag) {
-                var flow_uri = sip.encodeFlowUri(flow);
+                let flow_uri = sip.encodeFlowUri(flow);
                 flow_uri.params.lr = null;
                 rq.headers.route = contact.route.concat(rq.headers.route || []);
                 rq.headers['record-route'] = [{ uri: flow_uri }].concat(contact.route, rq.headers['record-route'] || []);
             } else
             if (rq.headers.route) {
-                var furi = sip.encodeFlowUri(flow);
+                let furi = sip.encodeFlowUri(flow);
                 if (rq.headers.route[0].hostname == furi.hostname && rq.headers.route[0].user == furi.user)
                     rq.headers.route.shift();
             }
         } else {
             if (rq.headers.route) {
-                var furi = sip.encodeFlowUri(flow);
+                let furi = sip.encodeFlowUri(flow);
                 if (rq.headers.route[0].hostname == furi.hostname)
                     rq.headers.route.shift();
             }

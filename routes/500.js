@@ -1,14 +1,14 @@
 'use strict';
 
-var sip = require('sip');
-var proxy = require('sip/proxy');
+let sip = require('sip');
+let proxy = require('sip/proxy');
 
 module.exports = function(self, rq, flow, cb) {
     if (rq.headers.to.params.tag)
     //if (rq.method !== 'INVITE')
         return cb(false);
 
-    var user = sip.parseUri(rq.headers.to.uri).user;
+    let user = sip.parseUri(rq.headers.to.uri).user;
 
     function work(err, contact) {
         rq._toContacts = contact;

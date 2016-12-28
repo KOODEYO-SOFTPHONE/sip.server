@@ -64,37 +64,37 @@ function sip_server(app) {
     // require('look').start(3000, '127.0.0.1');
 
     // переменные для логгирования
-    var cfgPath = '../../config';
-    var log4js = require('log4js');
+    let cfgPath = '../../config';
+    let log4js = require('log4js');
     log4js.configure(cfgPath + '/logger.json', { reloadSecs: 300 });
-    var logger = log4js.getLogger('console');
-    var sip_logger = log4js.getLogger('sip');
+    let logger = log4js.getLogger('console');
+    let sip_logger = log4js.getLogger('sip');
 
 
-    var sip = require('sip');
-    var proxy = require('sip/proxy');
-    var digest = require('sip/digest');
-    // var util = require('sys');
-    var os = require('os');
-    var util = require('../../lib/util');
+    let sip = require('sip');
+    let proxy = require('sip/proxy');
+    let digest = require('sip/digest');
+    // let util = require('sys');
+    let os = require('os');
+    let util = require('../../lib/util');
 
     // объявление переменных для считывания ini файла
-    var fs = require('fs');
-    var ini = require('ini');
+    let fs = require('fs');
+    let ini = require('ini');
 
     // получаем путь к базе (параметр URL)
-    var dbURL = ini.parse(fs.readFileSync(cfgPath + '/db.ini', 'utf-8')).URL;
+    let dbURL = ini.parse(fs.readFileSync(cfgPath + '/db.ini', 'utf-8')).URL;
 
     // подключение к БД MongoDB
-    //var Schema = require('jugglingdb').Schema;
-    //var schema = new Schema('mongodb', {url: 'mongodb://127.0.0.1/komunikator2'});
-    var jugglingdb = require('jugglingdb');
-    var schema = new jugglingdb.Schema('mongodb', { url: dbURL });
-    //var schema = new Schema('mongodb', {host: 'localhost', port: 27017, database: 'komunikator2', username: 'admin', password: 'admin'});
-    //var schema = new Schema('mongodb', {url: 'mongodb://admin:admin@127.0.0.1:27017/komunikator2'});
+    //let Schema = require('jugglingdb').Schema;
+    //let schema = new Schema('mongodb', {url: 'mongodb://127.0.0.1/komunikator2'});
+    let jugglingdb = require('jugglingdb');
+    let schema = new jugglingdb.Schema('mongodb', { url: dbURL });
+    //let schema = new Schema('mongodb', {host: 'localhost', port: 27017, database: 'komunikator2', username: 'admin', password: 'admin'});
+    //let schema = new Schema('mongodb', {url: 'mongodb://admin:admin@127.0.0.1:27017/komunikator2'});
 
     //Определяем схему (таблицу или по терминологии MongoDB - коллецию)
-    var accounts = schema.define('accounts', {
+    let accounts = schema.define('accounts', {
         login: String,
         password: String
     });
@@ -110,8 +110,8 @@ function sip_server(app) {
     //logger.debug(' ============== accounts: ==================');
     //logger.debug(accounts);
 
-    var registry = {}; // сюда будем писать абонентов из базы
-    var contacts = {}; // объект для хранения реально подключившихся пользователей, а не всех зарегистрированных
+    let registry = {}; // сюда будем писать абонентов из базы
+    let contacts = {}; // объект для хранения реально подключившихся пользователей, а не всех зарегистрированных
 
     // для чтения всех записей из коллекции accounts, используем callback функцию all модуля jugglingdb
     accounts.all(function(err, result) {
@@ -132,8 +132,8 @@ function sip_server(app) {
         registry = {}; // каждый раз при запросе информации об абонентах из базы очищаем объект, чтобы не было неактуальных данных
 
         // формируем объект registry для проверки авторизации абонентов
-        for (var i = 0, len = result.length; i < len; i++) {
-            var srcObjfromBD = {}; // переменная для получения из массива result только того объекта, который был считан из базы
+        for (let i = 0, len = result.length; i < len; i++) {
+            let srcObjfromBD = {}; // переменная для получения из массива result только того объекта, который был считан из базы
             srcObjfromBD = result[i].toObject(); // получаем из каждой (i-ой) строки нужный объект
 
             // logger.debug(' ============== result[i]: ==================');
@@ -146,7 +146,7 @@ function sip_server(app) {
             // logger.debug(' ============= Object.keys: ===============');
             // logger.debug(Object.keys(srcObjfromBD).length);
 
-            for (var key in srcObjfromBD) {
+            for (let key in srcObjfromBD) {
                 // отфильтровывает свойства, принадлежащие не самому объекту, а его прототипу
                 // по идее, если использована конструкция srcObjfromBD = result[i].toObject(), то чужих свойств
                 // быть не должно, но пока на всякий случай оставил
@@ -208,8 +208,8 @@ function sip_server(app) {
      * @return {Boolean} true - регистрация закончилась, false - регистрация не закончилась
      */
     function isExpiresOver(user) {
-        var data2 = new Date(); // создаётся объект даты (получаем новую дату при запросе абонента)
-        var data2mSec = parseInt(data2.valueOf()); // перевод новой даты в число миллисекунд
+        let data2 = new Date(); // создаётся объект даты (получаем новую дату при запросе абонента)
+        let data2mSec = parseInt(data2.valueOf()); // перевод новой даты в число миллисекунд
 
         logger.debug(' ================== data2mSec: ', data2mSec);
 
@@ -344,10 +344,10 @@ function sip_server(app) {
                 logger.debug('======================= .onRequest {contacts}: ');
                 logger.debug(contacts);
 
-                var res = []; // подготавливаемый массив объектов из данных объекта contacts
+                let res = []; // подготавливаемый массив объектов из данных объекта contacts
 
                 // формирование массива объектов res из данных объекта contacts
-                for (var key in contacts) {
+                for (let key in contacts) {
                     res[res.length] = { 'login': key, 'regDateTime': util.formatDate(new Date(contacts[key].regDateTime)), 'expires': parseInt(contacts[key].expires), 'expiresTime': util.formatDate(new Date(contacts[key].expiresTime)) };
                 }
 
@@ -376,7 +376,7 @@ function sip_server(app) {
     function checkExpires()
     {
       logger.debug('-------------------------------------');
-      for (var key in contacts)
+      for (let key in contacts)
       {
         // logger.debug('key - '+key);
         delExpiresOver(key);
@@ -384,7 +384,7 @@ function sip_server(app) {
       logger.debug('++++++++++++++++++++++++++++++++++++++');
     };
 
-    var ID = setInterval(function(){checkExpires()}, 121000); // вторым параметром обозначается нужная задержка
+    let ID = setInterval(function(){checkExpires()}, 121000); // вторым параметром обозначается нужная задержка
     */
 
 
@@ -397,8 +397,8 @@ function sip_server(app) {
 
         //logger.debug(Array.isArray(registry));
 
-        //var contacts = {}; // объект для хранения реально подключившихся пользователей, а не всех зарегистрированных
-        var realm = os.hostname();
+        //let contacts = {}; // объект для хранения реально подключившихся пользователей, а не всех зарегистрированных
+        let realm = os.hostname();
 
         logger.info('starting server ...');
 
@@ -417,18 +417,18 @@ function sip_server(app) {
             }
         }, function(rq) {
             if (rq.method === 'REGISTER') { // добавить проверку на существование свойства rq.headers.to.uri).user (?)
-                var userlogin = sip.parseUri(rq.headers.to.uri).user;
+                let userlogin = sip.parseUri(rq.headers.to.uri).user;
 
                 logger.debug(' ================== metod: ' + rq.method); // показывает какой метод SIP вызван
 
                 logger.debug(' ============== userlogin: ==================');
                 logger.debug(userlogin);
 
-                var userinfo = registry[userlogin];
+                let userinfo = registry[userlogin];
                 logger.debug(' ============== userinfo: ==================');
                 logger.debug(userinfo);
                 if (!userinfo) { // если пользователь не известен
-                    var session = { realm: realm };
+                    let session = { realm: realm };
 
                     logger.debug(' ============== session: ==================');
                     logger.debug(session);
@@ -464,11 +464,11 @@ function sip_server(app) {
                             // logger.debug(rq.headers.expires);
 
                             // вычисление времени "протухания" регистрирующегося контакта и запись этого времени в contacts
-                            var data = new Date(); // создаётся объект даты (data.valueOf() получает миллисекунды)
-                            var dataMSec = parseInt(data.valueOf()); // получаем миллисекунды, прошедшие с 1.01.1970 в часовом поясе UTC
+                            let data = new Date(); // создаётся объект даты (data.valueOf() получает миллисекунды)
+                            let dataMSec = parseInt(data.valueOf()); // получаем миллисекунды, прошедшие с 1.01.1970 в часовом поясе UTC
                             // получаем дату и время "протухания" абонента
                             // expires умножаем на 1000, чтобы получить миллисекунды
-                            var data1 = dataMSec + parseInt(rq.headers.expires) * 1000;
+                            let data1 = dataMSec + parseInt(rq.headers.expires) * 1000;
 
                             /*
                                 если свойство regDateTime есть в объекте contacts[userlogin], значит абонент не снялся с регистрации,
@@ -488,7 +488,7 @@ function sip_server(app) {
                             contacts[userlogin] = { expiresTime: data1 };
 
                             // вызываем функцию setTimeout с временем задержки равным rq.headers.expires + 1
-                            var curTimerID = setTimeout(delExpiresOver(userlogin), (parseInt(rq.headers.expires) + 1) * 1000); // вторым параметром обозначается нужная задержка. Умножаем на 1000 для приведения к миллисекундам по синтаксису
+                            let curTimerID = setTimeout(delExpiresOver(userlogin), (parseInt(rq.headers.expires) + 1) * 1000); // вторым параметром обозначается нужная задержка. Умножаем на 1000 для приведения к миллисекундам по синтаксису
 
                             // теперь пишем в объект все нужные свойства
                             contacts[userlogin] = { contact: rq.headers.contact, regDateTime: dataMSec, expires: rq.headers.expires, expiresTime: data1, TimerID: curTimerID };
@@ -510,7 +510,7 @@ function sip_server(app) {
                         logger.debug(' ================== data1: ', data1);
 
                         rq.version = '2.0';
-                        var rs = sip.makeResponse(rq, 200, 'Ok');
+                        let rs = sip.makeResponse(rq, 200, 'Ok');
                         rs.headers.contact = rq.headers.contact;
                         rs.headers.to.tag = Math.floor(Math.random() * 1e6);
                         proxy.send(rs);
@@ -523,7 +523,7 @@ function sip_server(app) {
 
                 logger.debug(' !!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ');
 
-                var user = sip.parseUri(rq.uri).user;
+                let user = sip.parseUri(rq.uri).user;
 
                 logger.debug(' ================== metod: ' + rq.method); // показывает какой метод SIP вызван
                 // logger.debug(' ================== user: '+user+', тип - '+typeof(user));

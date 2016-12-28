@@ -1,11 +1,11 @@
 'use strict';
 
-var sip = require('sip');
-var proxy = require('sip/proxy');
+let sip = require('sip');
+let proxy = require('sip/proxy');
 
 //Запрос от незарегистрированного пользователя
 module.exports = function(self, rq, flow, cb) {
-    var user = sip.parseUri(rq.headers.from.uri).user;
+    let user = sip.parseUri(rq.headers.from.uri).user;
 
     function work(err, contact) {
         if (contact && contact.length)

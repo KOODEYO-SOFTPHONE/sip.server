@@ -1,8 +1,8 @@
 'use strict';
 
-var sip = require('sip');
-var proxy = require('sip/proxy');
-var digest = require('sip/digest');
+let sip = require('sip');
+let proxy = require('sip/proxy');
+let digest = require('sip/digest');
 sip._registry = sip._registry || {}; //auth data 
 sip._contacts = sip._contacts || {}; //current status
 
@@ -10,9 +10,9 @@ sip._contactPrefix = 'sip:contact:';
 sip._sessionPrefix = 'sip:session:';
 sip._sessionTimeout = 30000; //время жизни сессии авторизации (30 sec) 
 
-var log4js = require('log4js');
+let log4js = require('log4js');
 log4js.configure('./logger.json', { reloadSecs: 300 });
-var logger = log4js.getLogger('sip_server');
+let logger = log4js.getLogger('sip_server');
 
 // rinstance - for multi contacts
 //{"uri":"sip:122@172.17.2.82:60452;rinstance=fdbedfe4930e59d7"}
@@ -20,7 +20,7 @@ var logger = log4js.getLogger('sip_server');
 sip._getRinstance = function(contact) {
     if (!(contact && contact.uri))
         return '';
-    var match = contact.uri.match(/rinstance=([^;]+);?/);
+    let match = contact.uri.match(/rinstance=([^;]+);?/);
     if (!match && contact.params && contact.params['+sip.instance'])
         return ':' + contact.params['+sip.instance'].replace(/[^A-Za-z^0-9]/g, '');
     return match ? ':' + match[1] : ':' + (sip.parseUri(contact.uri) && (sip.parseUri(contact.uri).host + sip.parseUri(contact.uri).port)).replace(/\./g, '');
@@ -37,23 +37,23 @@ module.exports = function(self, rq, flow, cb) {
         //return /^guest/.test(user); 
         return !!(user[0] == '_');
     }
-    var user = sip.parseUri(rq.headers.to.uri).user;
+    let user = sip.parseUri(rq.headers.to.uri).user;
 
     module.parent.exports.getUsers({ name: user }, function(err, data) {
         if (!(isGuest(user) || (data && data.password))) { // we don't know this user and answer with a challenge to hide this fact 
-            var rs = digest.challenge({ realm: sip._realm }, sip.makeResponse(rq, 401, 'Authentication Required'));
+            let rs = digest.challenge({ realm: sip._realm }, sip.makeResponse(rq, 401, 'Authentication Required'));
             proxy.send(rs);
         } else {
-            var rinstance = sip._getRinstance(rq.headers.contact && rq.headers.contact[0]);
+            let rinstance = sip._getRinstance(rq.headers.contact && rq.headers.contact[0]);
 
             function register(err, contact) {
-                var now = new Date().getTime();
-                var expires = parseInt(rq.headers.expires) * 1000 || 0;
-                var contact = rq.headers.contact && rq.headers.contact[0];
+                let now = new Date().getTime();
+                let expires = parseInt(rq.headers.expires) * 1000 || 0;
+                contact = rq.headers.contact && rq.headers.contact[0];
                 contact.uri = 'sip:' + user + '@' + flow.address + ':' + flow.port; //real address
 
-                var ob = !!( /*flow.protocol && flow.protocol.toUpperCase() == 'WS' && */ contact && contact.params['reg-id'] && contact.params['+sip.instance']);
-                var binding = {
+                let ob = !!( /*flow.protocol && flow.protocol.toUpperCase() == 'WS' && */ contact && contact.params['reg-id'] && contact.params['+sip.instance']);
+                let binding = {
                     regDateTime: (contact && contact.regDateTime) ? contact.regDateTime : now,
                     expiresTime: now + expires,
                     expires: expires,
@@ -61,7 +61,7 @@ module.exports = function(self, rq, flow, cb) {
                     ob: ob
                 };
                 if (ob) {
-                    var route_uri = sip.encodeFlowUri(flow);
+                    let route_uri = sip.encodeFlowUri(flow);
                     route_uri.params.lr = null;
                     binding.route = [{ uri: route_uri }];
                     binding.user = { uri: rq.headers.to.uri };
@@ -70,20 +70,27 @@ module.exports = function(self, rq, flow, cb) {
                     expires || 1, //ttl  1ms == remove,
                     binding
                 );
+
+                /*
+                logger.trace('!!!!!!!! sip._contactPrefix + user + rinstance: ' + sip._contactPrefix + user + rinstance);
+                logger.trace('!!!!!!!! binding: ');
+                logger.trace(binding);
+                */
+
                 //self.app.emit('sip.chgContacts');
             };
 
             function auth(err, session) {
                 session = session || { realm: sip._realm };
                 if (!isGuest(user) && !(digest.authenticateRequest(session, rq, { user: user, password: data.password }))) {
-                    var rs = digest.challenge(session, sip.makeResponse(rq, 401, 'Authentication Required'));
+                    let rs = digest.challenge(session, sip.makeResponse(rq, 401, 'Authentication Required'));
                     sip._contacts.set(sip._sessionPrefix + user + rinstance, sip._sessionTimeout, session);
                     proxy.send(rs);
                 } else {
                     //получаем текущий контакт и регистрируемся
                     sip._contacts.get(sip._contactPrefix + user + rinstance, register);
 
-                    var rs = sip.makeResponse(rq, 200, 'OK');
+                    let rs = sip.makeResponse(rq, 200, 'OK');
                     rs.headers.contact = rq.headers.contact;
                     rs.headers.to.tag = Math.floor(Math.random() * 1e6);
                     // Notice  _proxy.send_ not sip.send

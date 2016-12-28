@@ -1,19 +1,19 @@
 'use strict';
 
 //**************************************** gateways ****************************************
-var digest, rq, sip, util, uuid;
+let digest, rq, sip, util, uuid;
 
 sip = require('sip');
 digest = require('sip/digest');
 util = require('util');
 uuid = require('node-uuid');
 
-var app; // объявляется объект app для вывода и отправки сообщений
-var self; // объявляется объект self для логгирования по разным уровням
+let app; // объявляется объект app для вывода и отправки сообщений
+let self; // объявляется объект self для логгирования по разным уровням
 
 //**************************************** Settings ****************************************
-var gateways = {};
-var currentTimers = [];
+let gateways = {};
+let currentTimers = [];
 gateways.status = [];
 gateways.parameter = {};
 
@@ -73,7 +73,7 @@ gateways.register = function(auth, cb, rq) {
     gateways.parameter.user_agent = gateways.parameter.user_agent || "Kommunikator2";
     auth.expires = auth.expires || gateways.parameter.expires_default;
 
-    var rq = rq || {
+    let rq = rq || {
         method: 'REGISTER',
         uri: 'sip:' + auth.host + ':' + auth.port,
         headers: {
@@ -100,8 +100,8 @@ gateways.register = function(auth, cb, rq) {
     };
 
     sip.send(rq, function(rs) {
-        var context, e, _ref;
-        var gateway = '"' + rq.headers.to.uri.replace(/^sip:/, '') + '"';
+        let context, e, _ref;
+        let gateway = '"' + rq.headers.to.uri.replace(/^sip:/, '') + '"';
 
         try {
             if (rs.status === 401 || rs.status === 407) {
@@ -165,7 +165,7 @@ function deletelAllTimers() {
     self.trace('Gateways deletelAllTimers Count keys in timers on start = ' + currentTimers.length);
 
     while (currentTimers.length) {
-        var deleteTimer = currentTimers.shift();
+        let deleteTimer = currentTimers.shift();
         clearInterval(deleteTimer);
     }
 
@@ -195,22 +195,22 @@ function startRegister(auth) {
 
     function cb(err, result, auth) {
         auth.port = auth.port || 5062;
-        var gateway = '"' + auth.user + '@' + (auth.domain || auth.host) + auth.port + '"';
+        let gateway = '"' + auth.user + '@' + (auth.domain || auth.host) + auth.port + '"';
 
         if (err && err.status && err.reason) {
             self.trace('Gateway ' + gateway + ' startRegister  Err status: ' + util.inspect(err.status, { showHidden: true, depth: null }));
             self.trace('Gateway ' + gateway + ' startRegister  Err reason: ' + util.inspect(err.reason, { showHidden: true, depth: null }));
         }
 
-        var isCorrectData = ((auth && auth.host) && (typeof result == 'boolean'));
+        let isCorrectData = ((auth && auth.host) && (typeof result == 'boolean'));
 
         if (isCorrectData) {
-            var _before = JSON.stringify(sip._gateways.status);
+            let _before = JSON.stringify(sip._gateways.status);
 
             //auth содержит ссылку на нужный шлюз в массиве gateways.status, поэтому вносим изменения прямо в него
             auth.status = result;
             self.debug('Gateway ' + gateway + ' Registration ' + (result ? 'success' : 'failed'));
-            var _after = JSON.stringify(sip._gateways.status);
+            let _after = JSON.stringify(sip._gateways.status);
 
             if (_before !== _after) {
                 //app.emit('sip.chgGatewaysStatus');
@@ -237,7 +237,7 @@ function startRegister(auth) {
 
         authSetting.port = authSetting.port || 5062;
 
-        var gateway = '"' + authSetting.user + '@' + (authSetting.domain || authSetting.host) + ':' + authSetting.port + '"';
+        let gateway = '"' + authSetting.user + '@' + (authSetting.domain || authSetting.host) + ':' + authSetting.port + '"';
 
         if ((authSetting.active != true) && (authSetting.active != "true")) {
             return self.trace('Gateways ' + gateway + ' Registration disable');
@@ -246,7 +246,7 @@ function startRegister(auth) {
         self.trace('Gateways ' + gateway + ' Registration start');
 
         gateways.parameter.time_request = gateways.parameter.time_request || 12;
-        var time = (authSetting.expires - gateways.parameter.time_request) * 1000; // Время для таймера в миллисекундах
+        let time = (authSetting.expires - gateways.parameter.time_request) * 1000; // Время для таймера в миллисекундах
 
         if (time < 1000) {
             time = 1000;
@@ -258,7 +258,7 @@ function startRegister(auth) {
             }
         };
 
-        var timer = setInterval(_register(authSetting), time);
+        let timer = setInterval(_register(authSetting), time);
 
         currentTimers.push(timer);
 
@@ -312,7 +312,7 @@ module.exports = function(newSelf) {
 
     // подготовка и возврат контактных данных по запросу типа 'sip.getGateways'
     app.onRequest('sip.getGateways', function(param, cb) {
-        var data = sip._gateways.status;
+        let data = sip._gateways.status;
         cb(null, data);
     });
     */

@@ -1,7 +1,7 @@
 'use strict';
 
-var sip = require('sip');
-var proxy = require('sip/proxy');
+let sip = require('sip');
+let proxy = require('sip/proxy');
 
 sip._dialogs = {};
 sip._dialogID = function(rq) {
@@ -17,11 +17,11 @@ module.exports = function(self, rq, flow, cb) {
     if (!rq.headers.to.params.tag)
         return cb(false);
 
-    var id = sip._dialogID(rq);
+    let id = sip._dialogID(rq);
     if (!sip._dialogs[id])
         return cb(false);
 
-    var contact = sip._dialogs[id].contacts && sip._dialogs[id].contacts[rq.headers.to.uri];
+    let contact = sip._dialogs[id].contacts && sip._dialogs[id].contacts[rq.headers.to.uri];
     if (!contact)
         return cb(false);
     cb(true);
@@ -56,6 +56,6 @@ module.exports = function(self, rq, flow, cb) {
         self.app.emit('callEvent', sip._detail(rq));
     }
 
-    var user = sip.parseUri(rq.headers.from.uri).user;
+    let user = sip.parseUri(rq.headers.from.uri).user;
     sip._contacts.get(sip._contactPrefix + user + '*', work);
 };

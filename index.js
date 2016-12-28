@@ -1,32 +1,39 @@
 'use strict';
 
-//process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
-var log4js = require('log4js');
+let log4js = require('log4js');
 log4js.configure('./logger.json', { reloadSecs: 300 });
-var logger = log4js.getLogger('sip_server');
-var eventEmitter = require('events').EventEmitter;
-var getUsers = function(param, cb) {
+let logger = log4js.getLogger('sip_server');
+let eventEmitter = require('events').EventEmitter;
+let getUsers = function(param, cb) {
     cb('Error connect to database', {});
 };
-var fs = require('fs');
+let fs = require('fs');
 
 module.exports = {
     getUsers: getUsers
 };
 
 class SipServer extends eventEmitter {
-    constructor() {
+    constructor(settings) {
         super();
 
-        var sip = require('sip');
-        var proxy = require('sip/proxy');
-        var digest = require('sip/digest');
-        var os = require('os');
-        var util = require('./util');
+        for (let key in settings['sip']) {
+            //logger.trace('settings[sip][' + key + '] = ' + settings['sip'][key]);
+            this[key] = settings['sip'][key];
+        }
+        //logger.trace('this[REGISTER]');
+        //logger.trace(this['REGISTER']);
 
-        var _port = 5062; // порты по умолчанию для SIP сервера, если не придёт из модуля _config 
-        var _ws_port = 5062;
+        let sip = require('sip');
+        let proxy = require('sip/proxy');
+        let digest = require('sip/digest');
+        let os = require('os');
+        let util = require('./util');
+
+        let _port = 5062; // порты по умолчанию для SIP сервера, если не придёт из модуля _config 
+        let _ws_port = 5062;
 
         sip._registry = {}; // сюда будем писать абонентов из базы
         sip._contacts = new(require('./cache')); // объект для хранения реально подключившихся пользователей, а не всех зарегистрированных
@@ -35,7 +42,7 @@ class SipServer extends eventEmitter {
         // .get('key', calback)          //calback(err,result)
         // .remove('key')                
 
-        var rules = []; //правила обработки sip сообщений
+        let rules = []; //правила обработки sip сообщений
 
         eventsProcessing(); // подписка и обработка событий, запуск SIP сервера
 
@@ -49,7 +56,7 @@ class SipServer extends eventEmitter {
          */
         function onRequest(rq, flow) {
             //rules = rules || [];
-            var i = 0;
+            let i = 0;
 
             function work(stop) { // stop - (true/false) продолжить выполенние следующего правила или нет
                 if (i && stop) {
@@ -57,7 +64,7 @@ class SipServer extends eventEmitter {
                 }
                 if (stop)
                     return;
-                var rule;
+                let rule;
                 if (rule = rules[i++])
                     rule(this, rq, flow, work); //запускаем правила асинхронно
             };
@@ -77,19 +84,19 @@ class SipServer extends eventEmitter {
          */
         function loadRules() {
             rules = [];
-            var config = {
+            let config = {
                 rulesPath: './routes'
             };
 
-            var rulesPath = config['rulesPath'] || __dirname + '/routes';
-            var rulesName = require('./util').getFiles(rulesPath, false);
+            let rulesPath = config['rulesPath'] || __dirname + '/routes';
+            let rulesName = require('./util').getFiles(rulesPath, false);
             logger.debug('rulesName.length: ', rulesName.length);
             if (!rulesName.length)
                 return;
             rulesName.sort();
             rulesName.forEach(function(ruleName) {
                 try {
-                    var rule = require(rulesPath + '/' + ruleName);
+                    let rule = require(rulesPath + '/' + ruleName);
                     if (rule instanceof Function) {
                         rule._name = ruleName.replace('.js', '');
                         rules.push(rule);
@@ -114,8 +121,8 @@ class SipServer extends eventEmitter {
             sip._registry = {}; // каждый раз при запросе информации об абонентах из базы очищаем объект, чтобы не было неактуальных данных
 
             // формируем объект sip._registry для проверки авторизации абонентов
-            for (var i = 0, len = result.length; i < len; i++) {
-                var srcObjfromBD = {}; // переменная для получения из массива result только того объекта, который был считан из базы
+            for (let i = 0, len = result.length; i < len; i++) {
+                let srcObjfromBD = {}; // переменная для получения из массива result только того объекта, который был считан из базы
                 srcObjfromBD = result[i].toObject(); // получаем из каждой (i-ой) строки нужный объект
 
                 // logger.trace(' ============== result[i]: ==================');
@@ -125,7 +132,7 @@ class SipServer extends eventEmitter {
                 // чтобы потом заполнить его данными об абоненте (пока только пароль и id этой записи в документе БД)
                 sip._registry[srcObjfromBD.login] = {};
 
-                for (var key in srcObjfromBD) { // проходим по всем свойствам объекта srcObjfromBD = result[i].toObject()
+                for (let key in srcObjfromBD) { // проходим по всем свойствам объекта srcObjfromBD = result[i].toObject()
                     // отфильтровывает свойства, принадлежащие не самому объекту, а его прототипу
                     // по идее, если использована конструкция srcObjfromBD = result[i].toObject(), то чужих свойств
                     // быть не должно, но пока на всякий случай оставил
@@ -142,8 +149,8 @@ class SipServer extends eventEmitter {
                     if (key !== 'login') {
                         sip._registry[srcObjfromBD.login][key] = srcObjfromBD[key];
                     }
-                } // end for (var key in ...
-            } // end for (var i = 0, len = ...
+                } // end for (let key in ...
+            } // end for (let i = 0, len = ...
 
             // logger.trace(' ============== sip._registry: ==================');
             // logger.trace(sip._registry);
@@ -228,55 +235,9 @@ class SipServer extends eventEmitter {
          * @private
          */
         function eventsProcessing() {
-            // app.on('sip.chgContacts', function (message)
-            // {
-            //     logger.trace(message + ': SIP');
-            //     logger.trace(message);
-            // });
+            ProxyStart();
 
-            /*
-            // подготовка и возврат контактных данных по запросу типа 'sip.getContacts'
-            app.onRequest('sip.getContacts', function(param, cb) {
-                // logger.trace('======================= .onRequest {sip._contacts}: ');
-                // logger.trace(sip._contacts);
-
-
-                sip._contacts.get(sip._contactPrefix + '*', work) //получаем все существующие контакты асинхронно
-
-                function work(err, contacts) {
-                    contacts = contacts || [];
-
-                    var res = []; // подготавливаемый массив объектов из данных объекта sip._contacts
-
-                    // формирование массива объектов res из данных объекта sip._contacts
-                    //replace(new RegExp(sip._contactPrefix + ':([^:]+):?.*$'), '$1'
-                    contacts.forEach(function(contact, key) {
-                        if (contact.expires)
-                            res.push({
-                                login:
-                                    (contact.user && contact.user.uri) ? sip.parseUri(contact.user.uri).user :
-                                    (contact.contact && contact.contact.uri) ? sip.parseUri(contact.contact.uri).user : key,
-                                regDateTime: contact.regDateTime ? util.formatDate(new Date(contact.regDateTime)) : null,
-                                expires: contact.expires !== undefined ? parseInt(contact.expires) : null,
-                                expiresTime: contact.expiresTime ? util.formatDate(new Date(contact.expiresTime)) : null
-                            });
-                    });
-
-                    // logger.trace('===================== res:');
-                    // logger.trace(res);
-                    // logger.trace('===================== param:');
-                    // logger.trace(param);
-                    cb(null, res);
-                }
-            }); // end app.onRequest('sip.getContacts'
-            */
-
-            //emitEvents('sip.getConfig'); // запрос конфигурации
-            //emitEvents('sip.getAccounts'); // запрос списка зарегистрированных абонентов
-
-            ProxyStart(); // запуск SIP сервера
-
-        } // end eventsProcessing()
+        }
 
         /**
          * запуск SIP сервера
@@ -287,7 +248,7 @@ class SipServer extends eventEmitter {
 
             //logger.trace(Array.isArray(sip._registry));
 
-            //var sip._contacts = {}; // объект для хранения реально подключившихся пользователей, а не всех зарегистрированных
+            //let sip._contacts = {}; // объект для хранения реально подключившихся пользователей, а не всех зарегистрированных
             sip._realm = require('ip').address();
             logger.info('starting server ...');
             logger.info('SIP порт: ' + _port);
@@ -295,7 +256,7 @@ class SipServer extends eventEmitter {
             _ws_port ? logger.info('WebSocket started on port: ' + _ws_port) :
                 logger.info('WebSocket doesn\'t connect');
 
-            var options = {
+            let options = {
                 port: _port,
                 ws_port: _ws_port,
                 ws_path: '/sip',
@@ -322,8 +283,8 @@ class SipServer extends eventEmitter {
             };
 
             // Подключение сертификата
-            var keyPath = __dirname + '/' + 'server_localhost.key';
-            var crtPath = __dirname + '/' + 'server_localhost.crt';
+            let keyPath = __dirname + '/' + 'server_localhost.key';
+            let crtPath = __dirname + '/' + 'server_localhost.crt';
 
             if (fs.existsSync(keyPath) && fs.existsSync(crtPath)) {
                 options['tls'] = {
@@ -346,64 +307,90 @@ class SipServer extends eventEmitter {
         } // end ProxyStart
     }
 }
+/*
+let settings = {
+    sip: {
+        INVITE: (rq, flow) => {
+            console.log('On Event INVITE');
+            console.log(data);
+        },
+        ACK: (rq, flow) => {
+            console.log('On Event ACK');
+            console.log(data);
+        },
+        CANCEL: (rq, flow) => {
+            console.log('On Event CANCEL');
+            console.log(data);
+        },
+        BYE: (rq, flow) => {
+            console.log('On Event BYE');
+            console.log(data);
+        },
+        INFO: (rq, flow) => {
+            console.log('On Event INFO');
+            console.log(data);
+        },
+        MESSAGE: (rq, flow) => {
+            console.log('On Event MESSAGE');
+            console.log(data);
+        },
+        UPDATE: (rq, flow) => {
+            console.log('On Event UPDATE');
+            console.log(data);
+        },
+        REGISTER: (rq, flow) => {
+            console.log('On Event REGISTER');
 
-var sipServer = new SipServer();
+            console.log('rq');
+            console.log(rq);
+
+            console.log('flow');
+            console.log(flow);
+        }
+    }
+};
+*/
+let settings = {};
+
+let sipServer = new SipServer(settings);
 module.exports.SipServer = sipServer;
 
 sipServer.on('INVITE', (data) => {
-    console.log('!!!!!!!!!!!!!! ON INVITE ', data);
+    console.log('Event Emitter INVITE ', data);
 });
 sipServer.on('ACK', (data) => {
-    console.log('!!!!!!!!!!!!!! ON ACK ', data);
+    console.log('Event Emitter ON ACK ', data);
 });
 sipServer.on('CANCEL', (data) => {
-    console.log('!!!!!!!!!!!!!! ON CANCEL ', data);
+    console.log('Event Emitter ON CANCEL ', data);
 });
 sipServer.on('BYE', (data) => {
-    console.log('!!!!!!!!!!!!!! ON BYE ', data);
+    console.log('Event Emitter ON BYE ', data);
 });
 sipServer.on('INFO', (data) => {
-    console.log('!!!!!!!!!!!!!! ON INFO ', data);
+    console.log('Event Emitter ON INFO ', data);
 });
 sipServer.on('MESSAGE', (data) => {
-    console.log('!!!!!!!!!!!!!! ON MESSAGE ', data);
+    console.log('Event Emitter ON MESSAGE ', data);
 });
 sipServer.on('UPDATE', (data) => {
-    console.log('!!!!!!!!!!!!!! ON UPDATE ', data);
+    console.log('Event Emitter ON UPDATE ', data);
 });
 sipServer.on('REGISTER', (data) => {
-    console.log('!!!!!!!!!!!!!! ON REGISTER ', data);
+    console.log('Event Emitter ON REGISTER ', data);
 });
 
 function waterlineStorage() {
     logger.debug('dbstorage runs...');
 
-    //////////////////////////////////////////////////////////////////
-    // WATERLINE Storage
-    //////////////////////////////////////////////////////////////////
-
-    var Waterline = require('waterline');
-    var orm = new Waterline();
-
-    //////////////////////////////////////////////////////////////////
-    // WATERLINE CONFIG
-    //////////////////////////////////////////////////////////////////
-
-    // Require any waterline compatible adapters here
-    var diskAdapter = require('sails-disk');
-
-    // Build A Config Object
-    var config = {
-
-        // Setup Adapters
-        // Creates named adapters that have been required
+    let Waterline = require('waterline');
+    let orm = new Waterline();
+    let diskAdapter = require('sails-disk');
+    let config = {
         adapters: {
             'default': diskAdapter,
             disk: diskAdapter
         },
-
-        // Build Connections Config
-        // Setup connections using the named adapter configs
         connections: {
             myLocalDisk: {
                 adapter: 'disk'
@@ -414,11 +401,7 @@ function waterlineStorage() {
         }
     };
 
-    //////////////////////////////////////////////////////////////////
-    // WATERLINE MODELS
-    //////////////////////////////////////////////////////////////////
-
-    var Users = Waterline.Collection.extend({
+    let Users = Waterline.Collection.extend({
         identity: 'users',
         connection: 'myLocalDisk',
         attributes: {
@@ -427,12 +410,10 @@ function waterlineStorage() {
         }
     });
 
-    // Load the Models into the ORM
     orm.loadCollection(Users);
 
-    var models;
+    let models;
 
-    // Start Waterline passing adapters in
     orm.initialize(config, function(err, mod) {
         if (err) throw err;
         models = mod;

@@ -1,7 +1,7 @@
 'use strict';
 
-var sip = require('sip');
-var proxy = require('sip/proxy');
+let sip = require('sip');
+let proxy = require('sip/proxy');
 
 // правила набора номера
 sip._did = [
@@ -13,9 +13,9 @@ sip._did = [
 // звонок через шлюз
 module.exports = function(self, rq, flow, cb) {
 
-    var user = sip.parseUri(rq.uri).user;
-    var host = sip.parseUri(rq.uri).host;
-    var port = sip.parseUri(rq.uri).port;
+    let user = sip.parseUri(rq.uri).user;
+    let host = sip.parseUri(rq.uri).host;
+    let port = sip.parseUri(rq.uri).port;
     if (rq._toContacts !== undefined)
         work(null, rq._toContacts);
     else
@@ -26,11 +26,11 @@ module.exports = function(self, rq, flow, cb) {
         if (contact && contact.length)
             return cb(false);
 
-        var gatewayID;
+        let gatewayID;
 
         if (sip._did && sip._did.length)
             sip._did.some(function(did) {
-                var regex = new RegExp(did.regexp);
+                let regex = new RegExp(did.regexp);
                 if (regex.test(user)) {
                     user = user.replace(regex, '$1');
 
@@ -40,7 +40,7 @@ module.exports = function(self, rq, flow, cb) {
                     return true;
                 }
             });
-        var _gateways;
+        let _gateways;
 
         if (!(
                 gatewayID !== undefined &&
@@ -51,8 +51,8 @@ module.exports = function(self, rq, flow, cb) {
             return cb(false);
         cb(true);
 
-        var to_uri = rq.headers.to.uri;
-        var from_uri = rq.headers.from.uri;
+        let to_uri = rq.headers.to.uri;
+        let from_uri = rq.headers.from.uri;
 
         if (rq.method === 'INVITE')
             self.debug('call uses gateway "' + _gateways.user + '@' + (_gateways.domain || _gateways.host) + '"');
@@ -65,7 +65,7 @@ module.exports = function(self, rq, flow, cb) {
         rq.headers['user-agent'] = (sip._gateways && sip._gateways.user_agent) || rq.headers['user-agent'];
 
         if (rq.headers.contact) {
-            var contact_from = rq.headers.contact[0].uri.split(';');
+            let contact_from = rq.headers.contact[0].uri.split(';');
             contact_from = contact_from[0];
             rq.headers.contact[0].uri = 'sip:' + _gateways.user + '@' + host + ':' + port;
         }
@@ -92,7 +92,7 @@ module.exports = function(self, rq, flow, cb) {
                     if (rs.status == 200 &&
                         rs.headers.cseq.method == 'INVITE') {
 
-                        var contacts = {};
+                        let contacts = {};
                         contacts[rq.headers.from.uri] = contact_from;
                         contacts[to_uri] = rs.headers.contact[0].uri;
                         sip._dialogs[sip._dialogID(rs)] = { contacts: contacts };
