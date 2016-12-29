@@ -35,7 +35,9 @@ class SipServer extends eventEmitter {
         let _port = 5062; // порты по умолчанию для SIP сервера, если не придёт из модуля _config 
         let _ws_port = 5062;
 
-        sip._registry = {}; // сюда будем писать абонентов из базы
+        //sip._registry = {}; // сюда будем писать абонентов из базы
+        sip._registry = settings.registry; // accounts
+        this._registry = settings.registry;
         sip._contacts = new(require('./cache')); // объект для хранения реально подключившихся пользователей, а не всех зарегистрированных
         // содержит методы
         // .set('key',ttl/*ms*/,'value') //ttl - время жизни в mc
@@ -313,6 +315,12 @@ let proxyTest = require('sip/proxy');
 let digestTest = require('sip/digest');
 
 let settings = {
+    registry: {
+        6: {
+            user: '6',
+            password: '6'
+        }
+    },
     sip: {
         INVITE: (rq, flow) => {
             console.log('On Event INVITE');
@@ -352,13 +360,15 @@ let settings = {
             console.log(flow);
 
             function isGuest(user) {
-                //return /^guest/.test(user); 
                 return !!(user[0] == '_');
             }
             let user = sipTest.parseUri(rq.headers.to.uri).user;
 
-            module.exports.getUsers({ name: user }, function(err, data) {
-                logger.trace('err:' + err);
+            if (module.exports.SipServer._registry[user]) {
+                let data = module.exports.SipServer._registry[user];
+                //module.exports.getUsers({ name: user }, function(err, data) {
+
+                //logger.trace('err:' + err);
                 logger.trace('data:' + JSON.stringify(data));
                 if (!(isGuest(user) || (data && data.password))) { // we don't know this user and answer with a challenge to hide this fact 
                     let rs = digestTest.challenge({ realm: sipTest._realm }, sipTest.makeResponse(rq, 401, 'Authentication Required'));
@@ -412,7 +422,7 @@ let settings = {
                     //получаем текущую сессию пользователя и авторизуемся
                     sipTest._contacts.get(sipTest._sessionPrefix + user + rinstance, auth);
                 }
-            });
+            };
             return true
         }
     }

@@ -27,10 +27,11 @@ sip._getRinstance = function(contact) {
 };
 
 module.exports = function(self, rq, flow, cb) {
+    logger.trace('!!! module.parent.exports.SipServer: ' + JSON.stringify(module.parent.exports.SipServer._registry));
+
     if (rq.method !== 'REGISTER')
         return cb(false);
     cb(true);
-
     //module.parent.exports.SipServer.emit('REGISTER', rq);
 
     function isGuest(user) {
@@ -52,7 +53,7 @@ module.exports = function(self, rq, flow, cb) {
                 contact = rq.headers.contact && rq.headers.contact[0];
                 contact.uri = 'sip:' + user + '@' + flow.address + ':' + flow.port; //real address
 
-                let ob = !!( /*flow.protocol && flow.protocol.toUpperCase() == 'WS' && */ contact && contact.params['reg-id'] && contact.params['+sip.instance']);
+                let ob = !!(contact && contact.params['reg-id'] && contact.params['+sip.instance']);
                 let binding = {
                     regDateTime: (contact && contact.regDateTime) ? contact.regDateTime : now,
                     expiresTime: now + expires,
@@ -70,14 +71,6 @@ module.exports = function(self, rq, flow, cb) {
                     expires || 1, //ttl  1ms == remove,
                     binding
                 );
-
-                /*
-                logger.trace('!!!!!!!! sip._contactPrefix + user + rinstance: ' + sip._contactPrefix + user + rinstance);
-                logger.trace('!!!!!!!! binding: ');
-                logger.trace(binding);
-                */
-
-                //self.app.emit('sip.chgContacts');
             };
 
             function auth(err, session) {
