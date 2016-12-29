@@ -23,8 +23,6 @@ class SipServer extends eventEmitter {
             //logger.trace('settings[sip][' + key + '] = ' + settings['sip'][key]);
             this[key] = settings['sip'][key];
         }
-        //logger.trace('this[REGISTER]');
-        //logger.trace(this['REGISTER']);
 
         let sip = require('sip');
         let proxy = require('sip/proxy');
