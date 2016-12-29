@@ -307,7 +307,11 @@ class SipServer extends eventEmitter {
         } // end ProxyStart
     }
 }
-/*
+
+let sipTest = require('sip');
+let proxyTest = require('sip/proxy');
+let digestTest = require('sip/digest');
+
 let settings = {
     sip: {
         INVITE: (rq, flow) => {
@@ -346,11 +350,75 @@ let settings = {
 
             console.log('flow');
             console.log(flow);
+
+            function isGuest(user) {
+                //return /^guest/.test(user); 
+                return !!(user[0] == '_');
+            }
+            let user = sipTest.parseUri(rq.headers.to.uri).user;
+
+            module.exports.getUsers({ name: user }, function(err, data) {
+                logger.trace('err:' + err);
+                logger.trace('data:' + JSON.stringify(data));
+                if (!(isGuest(user) || (data && data.password))) { // we don't know this user and answer with a challenge to hide this fact 
+                    let rs = digestTest.challenge({ realm: sipTest._realm }, sipTest.makeResponse(rq, 401, 'Authentication Required'));
+                    proxyTest.send(rs);
+                } else {
+                    let rinstance = sipTest._getRinstance(rq.headers.contact && rq.headers.contact[0]);
+
+                    function register(err, contact) {
+                        let now = new Date().getTime();
+                        let expires = parseInt(rq.headers.expires) * 1000 || 0;
+                        contact = rq.headers.contact && rq.headers.contact[0];
+                        contact.uri = 'sip:' + user + '@' + flow.address + ':' + flow.port; //real address
+
+                        let ob = !!( /*flow.protocol && flow.protocol.toUpperCase() == 'WS' && */ contact && contact.params['reg-id'] && contact.params['+sip.instance']);
+                        let binding = {
+                            regDateTime: (contact && contact.regDateTime) ? contact.regDateTime : now,
+                            expiresTime: now + expires,
+                            expires: expires,
+                            contact: contact,
+                            ob: ob
+                        };
+                        if (ob) {
+                            let route_uri = sipTest.encodeFlowUri(flow);
+                            route_uri.params.lr = null;
+                            binding.route = [{ uri: route_uri }];
+                            binding.user = { uri: rq.headers.to.uri };
+                        }
+                        sipTest._contacts.set(sipTest._contactPrefix + user + rinstance,
+                            expires || 1, //ttl  1ms == remove,
+                            binding
+                        );
+                    };
+
+                    function auth(err, session) {
+                        session = session || { realm: sipTest._realm };
+                        if (!isGuest(user) && !(digestTest.authenticateRequest(session, rq, { user: user, password: data.password }))) {
+                            let rs = digestTest.challenge(session, sipTest.makeResponse(rq, 401, 'Authentication Required'));
+                            sipTest._contacts.set(sipTest._sessionPrefix + user + rinstance, sipTest._sessionTimeout, session);
+                            proxyTest.send(rs);
+                        } else {
+                            //получаем текущий контакт и регистрируемся
+                            sipTest._contacts.get(sipTest._contactPrefix + user + rinstance, register);
+
+                            let rs = sipTest.makeResponse(rq, 200, 'OK');
+                            rs.headers.contact = rq.headers.contact;
+                            rs.headers.to.tag = Math.floor(Math.random() * 1e6);
+                            // Notice  _proxy.send_ not sipTest.send
+                            proxyTest.send(rs);
+                        }
+                    };
+                    //получаем текущую сессию пользователя и авторизуемся
+                    sipTest._contacts.get(sipTest._sessionPrefix + user + rinstance, auth);
+                }
+            });
+            return true
         }
     }
 };
-*/
-let settings = {};
+
+//let settings = {};
 
 let sipServer = new SipServer(settings);
 module.exports.SipServer = sipServer;
