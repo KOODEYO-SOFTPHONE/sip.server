@@ -14,5 +14,5 @@ module.exports = function(self, rq, flow, cb) {
         proxy.send(sip.makeResponse(rq, 403, 'Caller Not Registered '));
     };
 
-    sip._contacts.get(sip._contactPrefix + user + '*', work);
+    sip._registry.get(sip._contactPrefix + user + '*', work);
 };

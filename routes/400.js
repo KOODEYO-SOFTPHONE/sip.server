@@ -19,7 +19,7 @@ module.exports = function(self, rq, flow, cb) {
     if (rq._toContacts !== undefined)
         work(null, rq._toContacts);
     else
-        sip._contacts.get(sip._contactPrefix + user + '*', work);
+        sip._registry.get(sip._contactPrefix + user + '*', work);
 
     function work(err, contact) {
         rq._toContacts = contact;

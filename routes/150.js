@@ -57,5 +57,5 @@ module.exports = function(self, rq, flow, cb) {
     }
 
     let user = sip.parseUri(rq.headers.from.uri).user;
-    sip._contacts.get(sip._contactPrefix + user + '*', work);
+    sip._registry.get(sip._contactPrefix + user + '*', work);
 };

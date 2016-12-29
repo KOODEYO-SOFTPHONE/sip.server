@@ -33,10 +33,15 @@ class SipServer extends eventEmitter {
         let _port = 5062; // порты по умолчанию для SIP сервера, если не придёт из модуля _config 
         let _ws_port = 5062;
 
-        //sip._registry = {}; // сюда будем писать абонентов из базы
-        sip._registry = settings.registry; // accounts
-        this._registry = settings.registry;
-        sip._contacts = new(require('./cache')); // объект для хранения реально подключившихся пользователей, а не всех зарегистрированных
+        sip._accounts = {}; // сюда будем писать абонентов из базы
+        this._accounts = {};
+
+        if (settings.accounts) {
+            sip._accounts = settings.accounts; // accounts
+            this._accounts = settings.accounts;
+        }
+
+        sip._registry = new(require('./cache')); // объект для хранения реально подключившихся пользователей, а не всех зарегистрированных
         // содержит методы
         // .set('key',ttl/*ms*/,'value') //ttl - время жизни в mc
         // .get('key', calback)          //calback(err,result)
@@ -111,16 +116,16 @@ class SipServer extends eventEmitter {
         }
 
         /**
-         * преобразует данные из базы и заполняет ими объект sip._registry
+         * преобразует данные из базы и заполняет ими объект sip._accounts
          * @method fillRegistry
          * @private
          *
          * @param {Array} result считанные из базы данные
          */
         function fillRegistry(result) {
-            sip._registry = {}; // каждый раз при запросе информации об абонентах из базы очищаем объект, чтобы не было неактуальных данных
+            sip._accounts = {}; // каждый раз при запросе информации об абонентах из базы очищаем объект, чтобы не было неактуальных данных
 
-            // формируем объект sip._registry для проверки авторизации абонентов
+            // формируем объект sip._accounts для проверки авторизации абонентов
             for (let i = 0, len = result.length; i < len; i++) {
                 let srcObjfromBD = {}; // переменная для получения из массива result только того объекта, который был считан из базы
                 srcObjfromBD = result[i].toObject(); // получаем из каждой (i-ой) строки нужный объект
@@ -130,7 +135,7 @@ class SipServer extends eventEmitter {
 
                 // в начале каждой итерации для ключа логина создаём пустой объект-значение,
                 // чтобы потом заполнить его данными об абоненте (пока только пароль и id этой записи в документе БД)
-                sip._registry[srcObjfromBD.login] = {};
+                sip._accounts[srcObjfromBD.login] = {};
 
                 for (let key in srcObjfromBD) { // проходим по всем свойствам объекта srcObjfromBD = result[i].toObject()
                     // отфильтровывает свойства, принадлежащие не самому объекту, а его прототипу
@@ -144,16 +149,16 @@ class SipServer extends eventEmitter {
                     // logger.trace('==== key: =====');
                     // logger.trace(key);
 
-                    // пропуск ключа login и заполнение в объекте sip._registry объекта-значение данными
+                    // пропуск ключа login и заполнение в объекте sip._accounts объекта-значение данными
                     // о логине ({ключ1: значение1, ключ2: значение2, ...})
                     if (key !== 'login') {
-                        sip._registry[srcObjfromBD.login][key] = srcObjfromBD[key];
+                        sip._accounts[srcObjfromBD.login][key] = srcObjfromBD[key];
                     }
                 } // end for (let key in ...
             } // end for (let i = 0, len = ...
 
-            // logger.trace(' ============== sip._registry: ==================');
-            // logger.trace(sip._registry);
+            // logger.trace(' ============== sip._accounts: ==================');
+            // logger.trace(sip._accounts);
 
         } // end function fillRegistry(result)
 
@@ -206,13 +211,13 @@ class SipServer extends eventEmitter {
                     /*
                     app.request('sip.getAccounts', { requestTimeout: 5000 }, function(err, data) {
                         if (!err) {
-                            // преобразуем данные из базы и заполняем ими объект sip._registry
+                            // преобразуем данные из базы и заполняем ими объект sip._accounts
                             fillRegistry(data);
 
-                            // logger.trace('sip.getAccounts: \n sip._registry = ' + out.inspect(sip._registry, opts));
+                            // logger.trace('sip.getAccounts: \n sip._accounts = ' + out.inspect(sip._accounts, opts));
                             logger.trace('sip.getAccounts:');
-                            logger.trace('sip._registry = ');
-                            logger.trace(sip._registry);
+                            logger.trace('sip._accounts = ');
+                            logger.trace(sip._accounts);
                         } else {
                             // logger.error(' ==================== ошибка БД: ');
                             logger.error(err);
@@ -246,9 +251,9 @@ class SipServer extends eventEmitter {
          */
         function ProxyStart() {
 
-            //logger.trace(Array.isArray(sip._registry));
+            //logger.trace(Array.isArray(sip._accounts));
 
-            //let sip._contacts = {}; // объект для хранения реально подключившихся пользователей, а не всех зарегистрированных
+            //let sip._registry = {}; // объект для хранения реально подключившихся пользователей, а не всех зарегистрированных
             sip._realm = require('ip').address();
             logger.info('starting server ...');
             logger.info('SIP порт: ' + _port);
@@ -313,7 +318,7 @@ let proxyTest = require('sip/proxy');
 let digestTest = require('sip/digest');
 
 let settings = {
-    registry: {
+    accounts: {
         6: {
             user: '6',
             password: '6'
@@ -362,8 +367,8 @@ let settings = {
             }
             let user = sipTest.parseUri(rq.headers.to.uri).user;
 
-            if (module.exports.SipServer._registry[user]) {
-                let data = module.exports.SipServer._registry[user];
+            if (module.exports.SipServer._accounts[user]) {
+                let data = module.exports.SipServer._accounts[user];
                 //module.exports.getUsers({ name: user }, function(err, data) {
 
                 //logger.trace('err:' + err);
@@ -380,7 +385,7 @@ let settings = {
                         contact = rq.headers.contact && rq.headers.contact[0];
                         contact.uri = 'sip:' + user + '@' + flow.address + ':' + flow.port; //real address
 
-                        let ob = !!( /*flow.protocol && flow.protocol.toUpperCase() == 'WS' && */ contact && contact.params['reg-id'] && contact.params['+sip.instance']);
+                        let ob = !!(contact && contact.params['reg-id'] && contact.params['+sip.instance']);
                         let binding = {
                             regDateTime: (contact && contact.regDateTime) ? contact.regDateTime : now,
                             expiresTime: now + expires,
@@ -394,7 +399,7 @@ let settings = {
                             binding.route = [{ uri: route_uri }];
                             binding.user = { uri: rq.headers.to.uri };
                         }
-                        sipTest._contacts.set(sipTest._contactPrefix + user + rinstance,
+                        sipTest._registry.set(sipTest._contactPrefix + user + rinstance,
                             expires || 1, //ttl  1ms == remove,
                             binding
                         );
@@ -404,11 +409,11 @@ let settings = {
                         session = session || { realm: sipTest._realm };
                         if (!isGuest(user) && !(digestTest.authenticateRequest(session, rq, { user: user, password: data.password }))) {
                             let rs = digestTest.challenge(session, sipTest.makeResponse(rq, 401, 'Authentication Required'));
-                            sipTest._contacts.set(sipTest._sessionPrefix + user + rinstance, sipTest._sessionTimeout, session);
+                            sipTest._registry.set(sipTest._sessionPrefix + user + rinstance, sipTest._sessionTimeout, session);
                             proxyTest.send(rs);
                         } else {
                             //получаем текущий контакт и регистрируемся
-                            sipTest._contacts.get(sipTest._contactPrefix + user + rinstance, register);
+                            sipTest._registry.get(sipTest._contactPrefix + user + rinstance, register);
 
                             let rs = sipTest.makeResponse(rq, 200, 'OK');
                             rs.headers.contact = rq.headers.contact;
@@ -418,7 +423,7 @@ let settings = {
                         }
                     };
                     //получаем текущую сессию пользователя и авторизуемся
-                    sipTest._contacts.get(sipTest._sessionPrefix + user + rinstance, auth);
+                    sipTest._registry.get(sipTest._sessionPrefix + user + rinstance, auth);
                 }
             };
             return true

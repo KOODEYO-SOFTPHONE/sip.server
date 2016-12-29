@@ -3,8 +3,8 @@
 let sip = require('sip');
 let proxy = require('sip/proxy');
 let digest = require('sip/digest');
-sip._registry = sip._registry || {}; //auth data 
-sip._contacts = sip._contacts || {}; //current status
+sip._accounts = sip._accounts || {}; //auth data 
+sip._registry = sip._registry || {}; //current status
 
 sip._contactPrefix = 'sip:contact:';
 sip._sessionPrefix = 'sip:session:';
@@ -27,7 +27,7 @@ sip._getRinstance = function(contact) {
 };
 
 module.exports = function(self, rq, flow, cb) {
-    logger.trace('!!! module.parent.exports.SipServer: ' + JSON.stringify(module.parent.exports.SipServer._registry));
+    logger.trace('!!! module.parent.exports.SipServer: ' + JSON.stringify(module.parent.exports.SipServer._accounts));
 
     if (rq.method !== 'REGISTER')
         return cb(false);
@@ -67,7 +67,7 @@ module.exports = function(self, rq, flow, cb) {
                     binding.route = [{ uri: route_uri }];
                     binding.user = { uri: rq.headers.to.uri };
                 }
-                sip._contacts.set(sip._contactPrefix + user + rinstance,
+                sip._registry.set(sip._contactPrefix + user + rinstance,
                     expires || 1, //ttl  1ms == remove,
                     binding
                 );
@@ -77,11 +77,11 @@ module.exports = function(self, rq, flow, cb) {
                 session = session || { realm: sip._realm };
                 if (!isGuest(user) && !(digest.authenticateRequest(session, rq, { user: user, password: data.password }))) {
                     let rs = digest.challenge(session, sip.makeResponse(rq, 401, 'Authentication Required'));
-                    sip._contacts.set(sip._sessionPrefix + user + rinstance, sip._sessionTimeout, session);
+                    sip._registry.set(sip._sessionPrefix + user + rinstance, sip._sessionTimeout, session);
                     proxy.send(rs);
                 } else {
                     //получаем текущий контакт и регистрируемся
-                    sip._contacts.get(sip._contactPrefix + user + rinstance, register);
+                    sip._registry.get(sip._contactPrefix + user + rinstance, register);
 
                     let rs = sip.makeResponse(rq, 200, 'OK');
                     rs.headers.contact = rq.headers.contact;
@@ -91,7 +91,7 @@ module.exports = function(self, rq, flow, cb) {
                 }
             };
             //получаем текущую сессию пользователя и авторизуемся
-            sip._contacts.get(sip._sessionPrefix + user + rinstance, auth);
+            sip._registry.get(sip._sessionPrefix + user + rinstance, auth);
         }
     });
     return true
