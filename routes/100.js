@@ -26,21 +26,17 @@ sip._getRinstance = function(contact) {
     return match ? ':' + match[1] : ':' + (sip.parseUri(contact.uri) && (sip.parseUri(contact.uri).host + sip.parseUri(contact.uri).port)).replace(/\./g, '');
 };
 
-module.exports = function(self, rq, flow, cb) {
-    logger.trace('!!! module.parent.exports.SipServer: ' + JSON.stringify(module.parent.exports.SipServer._accounts));
-
+module.exports = function(rq, flow, cb) {
     if (rq.method !== 'REGISTER')
         return cb(false);
     cb(true);
-    //module.parent.exports.SipServer.emit('REGISTER', rq);
 
     function isGuest(user) {
-        //return /^guest/.test(user); 
         return !!(user[0] == '_');
     }
     let user = sip.parseUri(rq.headers.to.uri).user;
 
-    module.parent.exports.getUsers({ name: user }, function(err, data) {
+    module.exports.getUsers({ name: user }, function(err, data) {
         if (!(isGuest(user) || (data && data.password))) { // we don't know this user and answer with a challenge to hide this fact 
             let rs = digest.challenge({ realm: sip._realm }, sip.makeResponse(rq, 401, 'Authentication Required'));
             proxy.send(rs);

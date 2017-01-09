@@ -4,14 +4,14 @@ let sip = require('sip');
 
 sip._userAgent = 'Komunikator 2.0';
 sip._allowMethods = ['INVITE', 'ACK', 'CANCEL', 'BYE', 'REGISTER', 'INFO', 'MESSAGE', 'UPDATE'];
-module.exports = function(self, rq, flow, cb) {
+module.exports = function(rq, flow, cb) {
     // Генерация sip сообщений
-    module.parent.exports.SipServer.emit(rq, flow);
+    this.emit(rq, flow);
 
     // Если есть кастомный обработчик на метод, вызываем его
-    if (module.parent.exports.SipServer[rq.method]) {
+    if (this[rq.method]) {
         cb(true);
-        return module.parent.exports.SipServer[rq.method](rq, flow);
+        return this[rq.method].call(this, rq, flow);
     }
 
     if (sip._allowMethods.indexOf(rq.method) != -1) {

@@ -15,13 +15,15 @@ module.exports = {
     getUsers: getUsers
 };
 
-class SipServer extends eventEmitter {
+module.exports.SipServer = class SipServer extends eventEmitter {
     constructor(settings) {
         super();
 
-        for (let key in settings['sip']) {
-            //logger.trace('settings[sip][' + key + '] = ' + settings['sip'][key]);
-            this[key] = settings['sip'][key];
+        let self = this;
+        if (settings) {
+            for (let key in settings['sip']) {
+                this[key] = settings['sip'][key];
+            }
         }
 
         let sip = require('sip');
@@ -33,15 +35,14 @@ class SipServer extends eventEmitter {
         let _port = 5062; // порты по умолчанию для SIP сервера, если не придёт из модуля _config 
         let _ws_port = 5062;
 
-        sip._accounts = {}; // сюда будем писать абонентов из базы
-        this._accounts = {};
+        this._accounts = sip._accounts = {}; // сюда будем писать абонентов из базы
 
-        if (settings.accounts) {
-            sip._accounts = settings.accounts; // accounts
-            this._accounts = settings.accounts;
+        if (settings && settings.accounts) {
+            this._accounts = sip._accounts = settings.accounts; // accounts
         }
 
         sip._registry = new(require('./cache')); // объект для хранения реально подключившихся пользователей, а не всех зарегистрированных
+        this._registry = sip._registry;
         // содержит методы
         // .set('key',ttl/*ms*/,'value') //ttl - время жизни в mc
         // .get('key', calback)          //calback(err,result)
@@ -71,7 +72,7 @@ class SipServer extends eventEmitter {
                     return;
                 let rule;
                 if (rule = rules[i++])
-                    rule(this, rq, flow, work); //запускаем правила асинхронно
+                    rule.call(self, rq, flow, work); //запускаем правила асинхронно
             };
             try {
                 work(false);
@@ -160,79 +161,7 @@ class SipServer extends eventEmitter {
             // logger.trace(' ============== sip._accounts: ==================');
             // logger.trace(sip._accounts);
 
-        } // end function fillRegistry(result)
-
-        /**
-         * выбор генерируемого события или запроса (содержит все генерируемые в модуле события и запросы)
-         * @method emitEvents
-         * @private
-         *
-         * @param {String} evnt - название, по которому выбирается генерируемоe событие
-         */
-        function emitEvents(evnt) {
-            // if (param === undefined) param = ''; // если не указан параметр, устанавливаем значение по умолчанию
-
-            switch (evnt) {
-                case 'web.getContacts':
-                    /*
-                    app.request('web.getContacts', { requestTimeout: 5000 }, function(err, data1) {
-                        logger.trace('err request web.getContacts: ==========================');
-                        logger.trace(err);
-                        if (!err) {
-                            logger.trace(' SIP (web.getContacts): ');
-                            logger.trace(data1);
-                        }
-                    });
-                    break;
-                    */
-                case 'sip.getConfig':
-                    // выполняется запрос и получение конфигурации для sip_server
-                    /*
-                    app.request('sip.getConfig', {}, function(err, conf) {
-                        if (!err) {
-                            // logger.trace(' ===================== конфигурация: ');
-                            // logger.trace(conf);
-                            //
-                            _port = conf.port;
-                            _ws_port = conf.ws_port || null;
-
-                            // logger.trace('SIP порт: ' + _port);
-
-                        } else {
-                            logger.error(' ==================== ошибка конфигурации: ');
-                            logger.error(err);
-                        }
-                    }); // app.request('sip.getConfig', ...
-                    */
-                    break;
-
-                case 'sip.getAccounts':
-                    // запрос списка зарегистрированных абонентов
-                    /*
-                    app.request('sip.getAccounts', { requestTimeout: 5000 }, function(err, data) {
-                        if (!err) {
-                            // преобразуем данные из базы и заполняем ими объект sip._accounts
-                            fillRegistry(data);
-
-                            // logger.trace('sip.getAccounts: \n sip._accounts = ' + out.inspect(sip._accounts, opts));
-                            logger.trace('sip.getAccounts:');
-                            logger.trace('sip._accounts = ');
-                            logger.trace(sip._accounts);
-                        } else {
-                            // logger.error(' ==================== ошибка БД: ');
-                            logger.error(err);
-                        }
-                    }); // end app.request('sip.getAccounts' ...
-                    */
-                    break;
-
-                case 'sip.serverStart':
-                    //app.emit('sip.serverStart');
-                    break;
-
-            }
-
-        } // end emitEvents(num)
+        }
 
         /**
          * обработка событий и запросов в том случае, если загрузились модули системы
@@ -305,161 +234,29 @@ class SipServer extends eventEmitter {
             logger.info('Server started on ' + sip._realm + ':' + sip._port); // Simple proxy server with registrar function.
 
             loadRules(); // загрузка правил обработки SIP
-            // app.on('callEvent',function(msg){logger.info(msg)});
+        }
+    }
 
-            emitEvents('sip.serverStart'); // генерация сообщения типа 'sip.serverStart'
+    get accounts() {
+        return this._accounts;
+    }
 
-        } // end ProxyStart
+    addAccount(name, account) {
+        if (name && account) {
+            this._accounts[name] = account;
+        }
+    }
+
+    removeAccount(account) {
+        if (this._accounts[account]) {
+            delete this._accounts[account];
+        }
+    }
+
+    get registry() {
+        return this._registry;
     }
 }
-
-let sipTest = require('sip');
-let proxyTest = require('sip/proxy');
-let digestTest = require('sip/digest');
-
-let settings = {
-    accounts: {
-        6: {
-            user: '6',
-            password: '6'
-        }
-    },
-    sip: {
-        INVITE: (rq, flow) => {
-            console.log('On Event INVITE');
-            console.log(data);
-        },
-        ACK: (rq, flow) => {
-            console.log('On Event ACK');
-            console.log(data);
-        },
-        CANCEL: (rq, flow) => {
-            console.log('On Event CANCEL');
-            console.log(data);
-        },
-        BYE: (rq, flow) => {
-            console.log('On Event BYE');
-            console.log(data);
-        },
-        INFO: (rq, flow) => {
-            console.log('On Event INFO');
-            console.log(data);
-        },
-        MESSAGE: (rq, flow) => {
-            console.log('On Event MESSAGE');
-            console.log(data);
-        },
-        UPDATE: (rq, flow) => {
-            console.log('On Event UPDATE');
-            console.log(data);
-        },
-        REGISTER: (rq, flow) => {
-            console.log('On Event REGISTER');
-
-            console.log('rq');
-            console.log(rq);
-
-            console.log('flow');
-            console.log(flow);
-
-            function isGuest(user) {
-                return !!(user[0] == '_');
-            }
-            let user = sipTest.parseUri(rq.headers.to.uri).user;
-
-            if (module.exports.SipServer._accounts[user]) {
-                let data = module.exports.SipServer._accounts[user];
-                //module.exports.getUsers({ name: user }, function(err, data) {
-
-                //logger.trace('err:' + err);
-                logger.trace('data:' + JSON.stringify(data));
-                if (!(isGuest(user) || (data && data.password))) { // we don't know this user and answer with a challenge to hide this fact 
-                    let rs = digestTest.challenge({ realm: sipTest._realm }, sipTest.makeResponse(rq, 401, 'Authentication Required'));
-                    proxyTest.send(rs);
-                } else {
-                    let rinstance = sipTest._getRinstance(rq.headers.contact && rq.headers.contact[0]);
-
-                    function register(err, contact) {
-                        let now = new Date().getTime();
-                        let expires = parseInt(rq.headers.expires) * 1000 || 0;
-                        contact = rq.headers.contact && rq.headers.contact[0];
-                        contact.uri = 'sip:' + user + '@' + flow.address + ':' + flow.port; //real address
-
-                        let ob = !!(contact && contact.params['reg-id'] && contact.params['+sip.instance']);
-                        let binding = {
-                            regDateTime: (contact && contact.regDateTime) ? contact.regDateTime : now,
-                            expiresTime: now + expires,
-                            expires: expires,
-                            contact: contact,
-                            ob: ob
-                        };
-                        if (ob) {
-                            let route_uri = sipTest.encodeFlowUri(flow);
-                            route_uri.params.lr = null;
-                            binding.route = [{ uri: route_uri }];
-                            binding.user = { uri: rq.headers.to.uri };
-                        }
-                        sipTest._registry.set(sipTest._contactPrefix + user + rinstance,
-                            expires || 1, //ttl  1ms == remove,
-                            binding
-                        );
-                    };
-
-                    function auth(err, session) {
-                        session = session || { realm: sipTest._realm };
-                        if (!isGuest(user) && !(digestTest.authenticateRequest(session, rq, { user: user, password: data.password }))) {
-                            let rs = digestTest.challenge(session, sipTest.makeResponse(rq, 401, 'Authentication Required'));
-                            sipTest._registry.set(sipTest._sessionPrefix + user + rinstance, sipTest._sessionTimeout, session);
-                            proxyTest.send(rs);
-                        } else {
-                            //получаем текущий контакт и регистрируемся
-                            sipTest._registry.get(sipTest._contactPrefix + user + rinstance, register);
-
-                            let rs = sipTest.makeResponse(rq, 200, 'OK');
-                            rs.headers.contact = rq.headers.contact;
-                            rs.headers.to.tag = Math.floor(Math.random() * 1e6);
-                            // Notice  _proxy.send_ not sipTest.send
-                            proxyTest.send(rs);
-                        }
-                    };
-                    //получаем текущую сессию пользователя и авторизуемся
-                    sipTest._registry.get(sipTest._sessionPrefix + user + rinstance, auth);
-                }
-            };
-            return true
-        }
-    }
-};
-
-//let settings = {};
-
-let sipServer = new SipServer(settings);
-module.exports.SipServer = sipServer;
-
-sipServer.on('INVITE', (data) => {
-    console.log('Event Emitter INVITE ', data);
-});
-sipServer.on('ACK', (data) => {
-    console.log('Event Emitter ON ACK ', data);
-});
-sipServer.on('CANCEL', (data) => {
-    console.log('Event Emitter ON CANCEL ', data);
-});
-sipServer.on('BYE', (data) => {
-    console.log('Event Emitter ON BYE ', data);
-});
-sipServer.on('INFO', (data) => {
-    console.log('Event Emitter ON INFO ', data);
-});
-sipServer.on('MESSAGE', (data) => {
-    console.log('Event Emitter ON MESSAGE ', data);
-});
-sipServer.on('UPDATE', (data) => {
-    console.log('Event Emitter ON UPDATE ', data);
-});
-sipServer.on('REGISTER', (data) => {
-    console.log('Event Emitter ON REGISTER ', data);
-});
 
 function waterlineStorage() {
     logger.debug('dbstorage runs...');
