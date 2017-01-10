@@ -3,12 +3,12 @@
 let sip = require('sip');
 let proxy = require('sip/proxy');
 let digest = require('sip/digest');
-sip._accounts = sip._accounts || {}; //auth data 
+sip._accounts = sip._accounts || {}; //auth data
 sip._registry = sip._registry || {}; //current status
 
 sip._contactPrefix = 'sip:contact:';
 sip._sessionPrefix = 'sip:session:';
-sip._sessionTimeout = 30000; //время жизни сессии авторизации (30 sec) 
+sip._sessionTimeout = 30000; //время жизни сессии авторизации (30 sec)
 
 let log4js = require('log4js');
 log4js.configure('./logger.json', { reloadSecs: 300 });
@@ -36,8 +36,16 @@ module.exports = function(rq, flow, cb) {
     }
     let user = sip.parseUri(rq.headers.to.uri).user;
 
-    module.exports.getUsers({ name: user }, function(err, data) {
-        if (!(isGuest(user) || (data && data.password))) { // we don't know this user and answer with a challenge to hide this fact 
+    if (sip._accounts[user]) {
+        registerUser(sip._accounts[user]);
+    } else {
+        module.parent.exports.getUsers({ name: user }, function(err, data) {
+            registerUser(data);
+        });
+    }
+
+    function registerUser(data) {
+        if (!(isGuest(user) || (data && data.password))) { // we don't know this user and answer with a challenge to hide this fact
             let rs = digest.challenge({ realm: sip._realm }, sip.makeResponse(rq, 401, 'Authentication Required'));
             proxy.send(rs);
         } else {
@@ -89,6 +97,7 @@ module.exports = function(rq, flow, cb) {
             //получаем текущую сессию пользователя и авторизуемся
             sip._registry.get(sip._sessionPrefix + user + rinstance, auth);
         }
-    });
+    }
+
     return true
 }
