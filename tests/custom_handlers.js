@@ -139,9 +139,8 @@ sipServer.on('REGISTER', (data) => {
     logger.trace('Event Emitter ON REGISTER ', data);
 });
 
-console.log('**********************************');
-
 console.log('[get] accounts: ', sipServer.accounts);
+
 sipServer.addAccount('7', {
     user: '7',
     password: '7'
@@ -149,8 +148,8 @@ sipServer.addAccount('7', {
 
 console.log('[set] accounts: ', sipServer.accounts);
 sipServer.removeAccount('7');
-console.log('[remove] accounts: ', sipServer.accounts);
 
+console.log('[remove] accounts: ', sipServer.accounts);
 
 console.log('*************************');
 
@@ -163,5 +162,9 @@ sipServer.registry.set('7', 60000, {
 
 sipServer.registry.get('7', (err, data) => {
     console.log(data);
-    sipServer.registry.remove('6');
+    sipServer.registry.remove('7');
+
+    sipServer.registry.get('7', (err, data) => {
+        console.log(data);
+    });
 });
