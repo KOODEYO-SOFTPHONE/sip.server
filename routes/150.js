@@ -11,10 +11,10 @@ sip._dialogID = function(rq) {
 };
 
 // маршрутизация через шлюзы (используется sip._dialogs)
-module.exports = function(self, rq, flow, cb) {
+module.exports = function(rq, flow, cb) {
 
     // check if it's an in dialog request
-    if (!rq.headers.to.params.tag)
+    if ((!rq.headers) || (!rq.headers.to.params.tag))
         return cb(false);
 
     let id = sip._dialogID(rq);
@@ -49,7 +49,7 @@ module.exports = function(self, rq, flow, cb) {
                 delete sip._dialogs[id];
         });
 
-        //only for remote user        
+        //only for remote user
         if (!fromContact && sip._dialogs[id].contacts[rq.headers.to.uri])
             rq.headers.to.uri = sip._dialogs[id].contacts[rq.headers.to.uri];
 

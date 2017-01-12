@@ -3,7 +3,7 @@
 let sip = require('sip');
 let proxy = require('sip/proxy');
 
-module.exports = function(self, rq, flow, cb) {
+module.exports = function(rq, flow, cb) {
     if (rq.headers.to.params.tag)
     //if (rq.method !== 'INVITE')
         return cb(false);

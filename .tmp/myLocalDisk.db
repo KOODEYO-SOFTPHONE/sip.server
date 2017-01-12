@@ -30,8 +30,8 @@
         "id": 4
       },
       {
-        "name": "5",
-        "password": "5",
+        "name": "alice",
+        "password": "alice",
         "createdAt": "2016-12-20T12:58:59.219Z",
         "updatedAt": "2016-12-20T12:58:59.219Z",
         "id": 5

@@ -42,10 +42,10 @@ sip._detail = function(rq) {
     return res;
 };
 
-module.exports = function(_self, rq, flow, cb) {
+module.exports = function(rq, flow, cb) {
     //основная обработка внутренних запросов
-    self = _self;
-    app = self.app;
+    //self = _self;
+    //app = self.app;
 
     let user = sip.parseUri(rq.headers.to.uri).user;
 
@@ -84,7 +84,7 @@ module.exports = function(_self, rq, flow, cb) {
         //преобразование контактов запроса
         if (rq.headers.contact)
             rq.headers.contact[0].uri = sip._maskContact(rq.headers.contact[0].uri, rq.headers.from.uri);
-        self.app.emit('callEvent', sip._detail(rq));
+        //self.app.emit('callEvent', sip._detail(rq));
 
         proxy.send(rq, function(rs) {
             //преобразование контактов ответа
@@ -93,8 +93,8 @@ module.exports = function(_self, rq, flow, cb) {
 
             rs.headers.via.shift(); //defaultCallback
 
-            if (rs.status == 180 || rs.status >= 200)
-                self.app.emit('callEvent', sip._detail(rs));
+            //if (rs.status == 180 || rs.status >= 200)
+                //self.app.emit('callEvent', sip._detail(rs));
 
             proxy.send(rs);
         });

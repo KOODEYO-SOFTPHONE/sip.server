@@ -11,7 +11,7 @@ sip._did = [
 ];
 
 // звонок через шлюз
-module.exports = function(self, rq, flow, cb) {
+module.exports = function(rq, flow, cb) {
 
     let user = sip.parseUri(rq.uri).user;
     let host = sip.parseUri(rq.uri).host;

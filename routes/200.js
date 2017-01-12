@@ -4,7 +4,7 @@ let sip = require('sip');
 let proxy = require('sip/proxy');
 
 //Запрос от незарегистрированного пользователя
-module.exports = function(self, rq, flow, cb) {
+module.exports = function(rq, flow, cb) {
     let user = sip.parseUri(rq.headers.from.uri).user;
 
     function work(err, contact) {

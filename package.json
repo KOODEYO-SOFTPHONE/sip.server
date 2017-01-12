@@ -3,7 +3,7 @@
     "version": "0.0.1",
     "scripts": {
         "start": "node index.js",
-        "test": "node ./tests/custom_handler.js"
+        "test": "node ./tests/default_handlers.js"
     },
     "repository": {
         "type": "git",
