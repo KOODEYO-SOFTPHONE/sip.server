@@ -33,7 +33,7 @@ module.exports.SipServer = class SipServer extends eventEmitter {
         let util = require('./util');
 
         let _port = 5062; // порты по умолчанию для SIP сервера, если не придёт из модуля _config 
-        let _ws_port = 5062;
+        let _ws_port = 8506;
 
         this._accounts = sip._accounts = {}; // сюда будем писать абонентов из базы
 
