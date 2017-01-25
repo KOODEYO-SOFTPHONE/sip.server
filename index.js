@@ -3,7 +3,7 @@
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 let log4js = require('log4js');
-log4js.configure('./logger.json', { reloadSecs: 300 });
+log4js.configure(__dirname + '/logger.json', { reloadSecs: 300 });
 let logger = log4js.getLogger('sip_server');
 let eventEmitter = require('events').EventEmitter;
 let getUsers = function(param, cb) {
@@ -91,7 +91,7 @@ module.exports.SipServer = class SipServer extends eventEmitter {
         function loadRules() {
             rules = [];
             let config = {
-                rulesPath: './routes'
+                rulesPath: __dirname + '/routes'
             };
 
             let rulesPath = config['rulesPath'] || __dirname + '/routes';
