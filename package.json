@@ -1,5 +1,5 @@
 {
-    "name": "sip_server",
+    "name": "node_sip_server",
     "version": "0.0.1",
     "scripts": {
         "start": "node index.js",
