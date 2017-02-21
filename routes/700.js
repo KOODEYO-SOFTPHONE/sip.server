@@ -54,7 +54,7 @@ module.exports = function(rq, flow, cb) {
         if (!contact)
             return cb(false);
         cb(true);
-        contact = contact[0];
+
         if (contact.ob) {
             if (!rq.headers.to.params.tag) {
                 let flow_uri = sip.encodeFlowUri(flow);
@@ -76,10 +76,13 @@ module.exports = function(rq, flow, cb) {
             //real contact
             rq.uri = contact.contact.uri;
         }
+        rq.uri = contact.contact.uri;
 
         //jssip incorrect uri hack
-        if (flow.protocol && flow.protocol.toUpperCase() == 'WS' && (rq.method == 'ACK' || rq.method == 'BYE'))
-            rq.uri = rq.headers.to.uri;
+        if (flow.protocol && flow.protocol.toUpperCase() == 'WS' && (rq.method == 'ACK' || rq.method == 'BYE')) {
+            //rq.uri = rq.headers.to.uri;
+            rq.uri = contact.contact.uri;
+        }
 
         //преобразование контактов запроса
         if (rq.headers.contact)
@@ -100,8 +103,27 @@ module.exports = function(rq, flow, cb) {
         });
     }
 
-    if (rq._toContacts !== undefined)
-        work(null, rq._toContacts);
-    else
-        sip._registry.get(sip._contactPrefix + user + '*', work);
+    if (rq._toContacts !== undefined) {
+        //console.log('rq._toContacts: ', rq._toContacts);
+        //work(null, rq._toContacts);
+        sip._registry.get(sip._contactPrefix + user + '*', (err, data) => {
+            if (err) {
+                console.log('err: ', err);
+                return;
+            }
+            data.forEach(function(item) {
+                work(err, item);
+            });
+        });
+    } else {
+        sip._registry.get(sip._contactPrefix + user + '*', (err, data) => {
+            if (err) {
+                console.log('err: ', err);
+                return;
+            }
+            data.forEach(function(item) {
+                work(err, item);
+            });
+        });
+    }
 };
