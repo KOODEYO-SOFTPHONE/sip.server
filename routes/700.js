@@ -111,9 +111,11 @@ module.exports = function(rq, flow, cb) {
                 console.log('err: ', err);
                 return;
             }
-            data.forEach(function(item) {
-                work(err, item);
-            });
+            if (Array.isArray(data)) { 
+                data.forEach(function(item) {
+                    work(err, item);
+                });
+            }
         });
     } else {
         sip._registry.get(sip._contactPrefix + user + '*', (err, data) => {

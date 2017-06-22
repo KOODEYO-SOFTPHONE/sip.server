@@ -11,7 +11,7 @@ sip._sessionPrefix = 'sip:session:';
 sip._sessionTimeout = 30000; //время жизни сессии авторизации (30 sec)
 
 let log4js = require('log4js');
-log4js.configure(__dirname + '../../logger.json', { reloadSecs: 300 });
+log4js.configure(process.cwd() +  '/logger.json', { reloadSecs: 300 });
 let logger = log4js.getLogger('sip_server');
 
 // rinstance - for multi contacts
@@ -83,7 +83,14 @@ module.exports = function(rq, flow, cb) {
                 if (!isGuest(user) && !(digest.authenticateRequest(session, rq, { user: user, password: data.password }))) {
                     let rs = digest.challenge(session, sip.makeResponse(rq, 401, 'Authentication Required'));
                     sip._registry.set(sip._sessionPrefix + user + rinstance, sip._sessionTimeout, session);
-                    proxy.send(rs);
+
+                    try {
+                        if (proxy.readyState === proxy.OPEN) {
+                            proxy.send(rs);
+                        }
+                    } catch (e) {
+                        logger.error(e);
+                    }
                 } else {
                     //получаем текущий контакт и регистрируемся
                     sip._registry.get(sip._contactPrefix + user + rinstance, register);

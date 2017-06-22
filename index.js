@@ -32,7 +32,7 @@ module.exports.SipServer = class SipServer extends eventEmitter {
         let os = require('os');
         let util = require('./util');
 
-        let _port = 5062; // порты по умолчанию для SIP сервера, если не придёт из модуля _config 
+        let _port = 5060; // порты по умолчанию для SIP сервера, если не придёт из модуля _config
         let _ws_port = 8506;
 
         this._accounts = sip._accounts = {}; // сюда будем писать абонентов из базы
@@ -46,7 +46,7 @@ module.exports.SipServer = class SipServer extends eventEmitter {
         // содержит методы
         // .set('key',ttl/*ms*/,'value') //ttl - время жизни в mc
         // .get('key', calback)          //calback(err,result)
-        // .remove('key')                
+        // .remove('key')
 
         let rules = []; //правила обработки sip сообщений
 
@@ -57,8 +57,8 @@ module.exports.SipServer = class SipServer extends eventEmitter {
          * @method onRequest
          * @private
          *
-         * @param {Object} rq - входящее сообщение, 
-         * @param {Object} flow - объект содержщий протокол, адрес и порт узла с которого было получено сообщение 
+         * @param {Object} rq - входящее сообщение,
+         * @param {Object} flow - объект содержщий протокол, адрес и порт узла с которого было получено сообщение
          */
         function onRequest(rq, flow) {
             //rules = rules || [];
@@ -226,7 +226,6 @@ module.exports.SipServer = class SipServer extends eventEmitter {
                     cert: fs.readFileSync(crtPath)
                 };
             }
-
             proxy.start(options, onRequest); // end proxy.start ...
 
             sip._port = _port;

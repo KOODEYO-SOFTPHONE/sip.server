@@ -2,77 +2,84 @@
   "appenders": [
     {
       "type": "file",
-      "filename": "/var/log/komunikator2/logger.log",
+      "filename": "log/logger.log",
       "maxLogSize": 1048577,
       "backups": 10,
       "category": "_logger"
     },
     {
       "type": "file",
-      "filename": "/var/log/komunikator2/storage.log",
+      "filename": "log/storage.log",
       "maxLogSize": 1048577,
       "backups": 10,
       "category": "_storage"
     },
     {
       "type": "file",
-      "filename": "/var/log/komunikator2/dbstorage.log",
+      "filename": "log/dbstorage.log",
       "maxLogSize": 1048577,
       "backups": 10,
       "category": "_dbstorage"
     },
     {
       "type": "file",
-      "filename": "/var/log/komunikator2/sip.log",
+      "filename": "log/sip.log",
       "maxLogSize": 1048577,
       "backups": 10,
       "category": "sip"
     },
     {
       "type": "file",
-      "filename": "/var/log/komunikator2/sip_server.log",
+      "filename": "log/sip_server.log",
       "maxLogSize": 1048577,
       "backups": 10,
       "category": "sip_server"
     },
     {
       "type": "file",
-      "filename": "/var/log/komunikator2/web.log",
+      "filename": "log/sip_js.log",
+      "maxLogSize": 1048577,
+      "backups": 10,
+      "category": "sip_js"
+    },
+    {
+      "type": "file",
+      "filename": "log/web.log",
       "maxLogSize": 1048577,
       "backups": 10,
       "category": "web_server"
     },
     {
       "type": "file",
-      "filename": "/var/log/komunikator2/config.log",
+      "filename": "log/config.log",
       "maxLogSize": 1048577,
       "backups": 10,
       "category": "_config"
     },
     {
       "type": "file",
-      "filename": "/var/log/komunikator2/controller.log",
+      "filename": "log/controller.log",
       "maxLogSize": 1048577,
       "backups": 10,
       "category": "_controller"
     },
     {
       "type": "file",
-      "filename": "/var/log/komunikator2/doc_server.log",
+      "filename": "log/doc_server.log",
       "maxLogSize": 1048577,
       "backups": 10,
       "category": "doc_server"
     },
     {
       "type": "file",
-      "filename": "/var/log/komunikator2/webrtc.log",
+      "filename": "log/webrtc.log",
       "maxLogSize": 1048577,
       "backups": 10,
       "category": "webrtc"
     },
     {
       "type": "file",
-      "filename": "/var/log/komunikator2/cluster.log",
+      "filename": "log/cluster.log",
       "maxLogSize": 1048577,
       "backups": 10,
       "category": "cluster"
@@ -80,7 +87,7 @@
     {
       "type": "console",
       "category": [       
-        "console","cluster","app","sip_server"
+        "console","cluster","app","sip_server","sip_js"
       ]
     }
   ],
