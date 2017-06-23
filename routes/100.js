@@ -99,6 +99,8 @@ module.exports = function(rq, flow, cb) {
                     rs.headers.contact = rq.headers.contact;
                     rs.headers.to.tag = Math.floor(Math.random() * 1e6);
                     // Notice  _proxy.send_ not sip.send
+
+                    // console.log('Module 100.js rs: ', rs);
                     proxy.send(rs);
                 }
             };

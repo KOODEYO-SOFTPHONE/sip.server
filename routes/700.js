@@ -64,7 +64,8 @@ module.exports = function(rq, flow, cb) {
             } else
             if (rq.headers.route) {
                 let furi = sip.encodeFlowUri(flow);
-                if (rq.headers.route[0].hostname == furi.hostname && rq.headers.route[0].user == furi.user)
+                if (rq.headers.route[0] && rq.headers.route[0].hostname 
+                    && rq.headers.route[0].hostname == furi.hostname && rq.headers.route[0].user == furi.user)
                     rq.headers.route.shift();
             }
         } else {
@@ -89,18 +90,24 @@ module.exports = function(rq, flow, cb) {
             rq.headers.contact[0].uri = sip._maskContact(rq.headers.contact[0].uri, rq.headers.from.uri);
         //self.app.emit('callEvent', sip._detail(rq));
 
-        proxy.send(rq, function(rs) {
-            //преобразование контактов ответа
-            if (rs.headers.contact)
-                rs.headers.contact[0].uri = sip._maskContact(rs.headers.contact[0].uri, rs.headers.from.uri);
+        // console.log('Module 700.js rq: ', rq);
 
-            rs.headers.via.shift(); //defaultCallback
+        try {
+            proxy.send(rq, function(rs) {
+                //преобразование контактов ответа
+                if (rs.headers.contact)
+                    rs.headers.contact[0].uri = sip._maskContact(rs.headers.contact[0].uri, rs.headers.from.uri);
 
-            //if (rs.status == 180 || rs.status >= 200)
-                //self.app.emit('callEvent', sip._detail(rs));
+                rs.headers.via.shift(); //defaultCallback
 
-            proxy.send(rs);
-        });
+                //if (rs.status == 180 || rs.status >= 200)
+                    //self.app.emit('callEvent', sip._detail(rs));
+
+                proxy.send(rs);
+            });
+        } catch (err) {
+            console.error('Module 700.js Error: ', err);
+        }
     }
 
     if (rq._toContacts !== undefined) {
@@ -108,7 +115,7 @@ module.exports = function(rq, flow, cb) {
         //work(null, rq._toContacts);
         sip._registry.get(sip._contactPrefix + user + '*', (err, data) => {
             if (err) {
-                console.log('err: ', err);
+                console.error('err: ', err);
                 return;
             }
             if (Array.isArray(data)) { 
@@ -120,7 +127,7 @@ module.exports = function(rq, flow, cb) {
     } else {
         sip._registry.get(sip._contactPrefix + user + '*', (err, data) => {
             if (err) {
-                console.log('err: ', err);
+                console.error('err: ', err);
                 return;
             }
             data.forEach(function(item) {
