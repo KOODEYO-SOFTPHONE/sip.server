@@ -101,7 +101,11 @@ module.exports = function(rq, flow, cb) {
                     // Notice  _proxy.send_ not sip.send
 
                     // console.log('Module 100.js rs: ', rs);
-                    proxy.send(rs);
+                    try {
+                        proxy.send(rs);
+                    } catch (err) {
+                        console.error('Module 100.js Error: ', err);
+                    }
                 }
             };
             //получаем текущую сессию пользователя и авторизуемся
