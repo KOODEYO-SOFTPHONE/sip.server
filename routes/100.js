@@ -11,7 +11,8 @@ sip._sessionPrefix = 'sip:session:';
 sip._sessionTimeout = 30000; //время жизни сессии авторизации (30 sec)
 
 let log4js = require('log4js');
-log4js.configure(process.cwd() +  '/logger.json', { reloadSecs: 300 });
+// log4js.configure(process.cwd() +  '/logger.json', { reloadSecs: 300 });
+log4js.configure(__dirname +  '/../logger.json', { reloadSecs: 300 });
 let logger = log4js.getLogger('sip_server');
 
 // rinstance - for multi contacts
