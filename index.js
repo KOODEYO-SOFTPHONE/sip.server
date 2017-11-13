@@ -42,6 +42,17 @@ module.exports.SipServer = class SipServer extends eventEmitter {
         }
 
         sip._registry = new(require('./cache')); // объект для хранения реально подключившихся пользователей, а не всех зарегистрированных
+
+        // setInterval( () => {
+        //     sip._registry.get('alice' + '*', (err, data) => {
+        //         if (data) {
+        //             console.log('data.length: ', data.length);
+        //         } else {
+        //             console.log('alice data.length: 0');
+        //         }
+        //     });
+        // }, 1000);
+
         this._registry = sip._registry;
         // содержит методы
         // .set('key',ttl/*ms*/,'value') //ttl - время жизни в mc
@@ -202,7 +213,7 @@ module.exports.SipServer = class SipServer extends eventEmitter {
                         // посылаем сообщение, когда встретится метод 'CANCEL', т.к. этот метод не отдаётся обработчику событий-методов
 
                         // TODO: перенести сюда код функции makeMsgCancel из модуля processing, а лучше, наверное, вызвать метод sip._detail (из 700.js)
-                        if (msg.method === 'CANCEL') {
+                        if (msg.method === 'CANCEL' && app) {
                             // msg = makeMsgCancel(msg);
                             app.emit('callEvent', msg);
                         }

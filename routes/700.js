@@ -71,7 +71,7 @@ module.exports = function(rq, flow, cb) {
         } else {
             if (rq.headers.route) {
                 let furi = sip.encodeFlowUri(flow);
-                if (rq.headers.route[0].hostname == furi.hostname)
+                if (rq.headers && rq.headers.route && rq.headers.route[0] && rq.headers.route[0].hostname == furi.hostname)
                     rq.headers.route.shift();
             }
             //real contact
