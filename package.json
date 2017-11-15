@@ -11,10 +11,10 @@
     },
     "dependencies": {
         "log4js": "^0.6.12",
-        "ip": "latest",
-        "node-uuid": "latest",
+        "ip": "^1.1.5",
+        "node-uuid": "^1.4.8",
         "sails-disk": "^0.10.10",
-        "sip": "latest",
+        "sip": "^0.0.3",
         "caching": "*",
         "waterline": "^0.11.6"
     }
