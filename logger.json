@@ -2,84 +2,84 @@
   "appenders": [
     {
       "type": "file",
-      "filename": "log/logger.log",
+      "filename": "logs/logger.log",
       "maxLogSize": 1048577,
       "backups": 10,
       "category": "_logger"
     },
     {
       "type": "file",
-      "filename": "log/storage.log",
+      "filename": "logs/storage.log",
       "maxLogSize": 1048577,
       "backups": 10,
       "category": "_storage"
     },
     {
       "type": "file",
-      "filename": "log/dbstorage.log",
+      "filename": "logs/dbstorage.log",
       "maxLogSize": 1048577,
       "backups": 10,
       "category": "_dbstorage"
     },
     {
       "type": "file",
-      "filename": "log/sip.log",
+      "filename": "logs/sip.log",
       "maxLogSize": 1048577,
       "backups": 10,
       "category": "sip"
     },
     {
       "type": "file",
-      "filename": "log/sip_server.log",
+      "filename": "logs/sip_server.log",
       "maxLogSize": 1048577,
       "backups": 10,
       "category": "sip_server"
     },
     {
       "type": "file",
-      "filename": "log/sip_js.log",
+      "filename": "logs/sip_js.log",
       "maxLogSize": 1048577,
       "backups": 10,
       "category": "sip_js"
     },
     {
       "type": "file",
-      "filename": "log/web.log",
+      "filename": "logs/web.log",
       "maxLogSize": 1048577,
       "backups": 10,
       "category": "web_server"
     },
     {
       "type": "file",
-      "filename": "log/config.log",
+      "filename": "logs/config.log",
       "maxLogSize": 1048577,
       "backups": 10,
       "category": "_config"
     },
     {
       "type": "file",
-      "filename": "log/controller.log",
+      "filename": "logs/controller.log",
       "maxLogSize": 1048577,
       "backups": 10,
       "category": "_controller"
     },
     {
       "type": "file",
-      "filename": "log/doc_server.log",
+      "filename": "logs/doc_server.log",
       "maxLogSize": 1048577,
       "backups": 10,
       "category": "doc_server"
     },
     {
       "type": "file",
-      "filename": "log/webrtc.log",
+      "filename": "logs/webrtc.log",
       "maxLogSize": 1048577,
       "backups": 10,
       "category": "webrtc"
     },
     {
       "type": "file",
-      "filename": "log/cluster.log",
+      "filename": "logs/cluster.log",
       "maxLogSize": 1048577,
       "backups": 10,
       "category": "cluster"
