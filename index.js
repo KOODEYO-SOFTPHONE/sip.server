@@ -32,6 +32,7 @@ module.exports.SipServer = class SipServer extends eventEmitter {
         let os = require('os');
         let util = require('./util');
 
+        this.sip = sip;
         let _port = 5060; // порты по умолчанию для SIP сервера, если не придёт из модуля _config
         let _ws_port = 8506;
 
@@ -43,6 +44,10 @@ module.exports.SipServer = class SipServer extends eventEmitter {
 
         sip._registry = new(require('./cache')); // объект для хранения реально подключившихся пользователей, а не всех зарегистрированных
 
+        sip._registry.onChange = (list) => {
+            list = list || [];
+            this.emit('updateRegistryList', list);
+        }
         // setInterval( () => {
         //     sip._registry.get('alice' + '*', (err, data) => {
         //         if (data) {
@@ -54,6 +59,7 @@ module.exports.SipServer = class SipServer extends eventEmitter {
         // }, 1000);
 
         this._registry = sip._registry;
+
         // содержит методы
         // .set('key',ttl/*ms*/,'value') //ttl - время жизни в mc
         // .get('key', calback)          //calback(err,result)
@@ -261,6 +267,10 @@ module.exports.SipServer = class SipServer extends eventEmitter {
         if (this._accounts[account]) {
             delete this._accounts[account];
         }
+    }
+
+    stop() {
+        this.sip.stop();
     }
 
     get registry() {

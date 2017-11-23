@@ -72,11 +72,12 @@ module.exports = function(rq, flow, cb) {
                     binding.route = [{ uri: route_uri }];
                     binding.user = { uri: rq.headers.to.uri };
                 }
-                console.log('sip._contactPrefix + user + rinstance: ', sip._contactPrefix + user + rinstance);
+
                 sip._registry.set(sip._contactPrefix + user + rinstance,
                     expires || 1, //ttl  1ms == remove,
                     binding
                 );
+                
             };
 
             function auth(err, session) {

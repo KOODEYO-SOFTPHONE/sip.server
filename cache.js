@@ -48,16 +48,26 @@ function Cache() {
         this.set = caching.store.set.bind(caching.store);
         this.remove = caching.store.remove.bind(caching.store);
     } else {
-        this.set = function(key, ttl, result) {
-            if (this.cache[key] && this.cache[key]._timeOut)
+        let selfCache = this;
+
+        this.set = function (key, ttl, result) {
+            if (selfCache.onChange) {
+                selfCache.onChange();
+            }
+
+            if (this.cache && this.cache[key] && this.cache[key]._timeOut)
                 clearTimeout(this.cache[key]._timeOut);
 
             this.cache[key] = result;
 
             if (ttl) {
                 let self = this;
-                this.cache[key]._timeOut = setTimeout(function() {
+                this.cache[key]._timeOut = setTimeout(function () {
                     delete self.cache[key];
+
+                    if (selfCache.onChange) {
+                        selfCache.onChange();
+                    }
                 }, ttl);
             }
         };
