@@ -51,10 +51,6 @@ function Cache() {
         let selfCache = this;
 
         this.set = function (key, ttl, result) {
-            if (selfCache.onChange) {
-                selfCache.onChange();
-            }
-
             if (this.cache && this.cache[key] && this.cache[key]._timeOut)
                 clearTimeout(this.cache[key]._timeOut);
 
@@ -69,6 +65,9 @@ function Cache() {
                         selfCache.onChange();
                     }
                 }, ttl);
+            }
+            if (selfCache.onChange) {
+                selfCache.onChange();
             }
         };
         this.set = this.set.bind(caching.store);

@@ -26,15 +26,11 @@ module.exports.SipServer = class SipServer extends eventEmitter {
             }
         }
 
-        let sip = require('sip');
+        let sip = this.sip = require('sip');
         let proxy = require('sip/proxy');
         let digest = require('sip/digest');
         let os = require('os');
         let util = require('./util');
-
-        this.sip = sip;
-        let _port = 5060; // порты по умолчанию для SIP сервера, если не придёт из модуля _config
-        let _ws_port = 8506;
 
         this._accounts = sip._accounts = {}; // сюда будем писать абонентов из базы
 
@@ -67,7 +63,7 @@ module.exports.SipServer = class SipServer extends eventEmitter {
 
         let rules = []; //правила обработки sip сообщений
 
-        eventsProcessing(); // подписка и обработка событий, запуск SIP сервера
+        // eventsProcessing(); // подписка и обработка событий, запуск SIP сервера
 
         /**
          * обработка входящих sip сообщений
@@ -98,6 +94,72 @@ module.exports.SipServer = class SipServer extends eventEmitter {
                 logger.trace(e.stack);
                 proxy.send(sip.makeResponse(rq, 500, "Server Internal Error"));
             }
+        }
+
+        this.ProxyStart = ProxyStart;
+
+        /**
+         * запуск SIP сервера
+         * @method ProxyStart
+         * @private
+         */
+        function ProxyStart(settings) {
+            //logger.trace(Array.isArray(sip._accounts));
+
+            let _port = (settings && settings.sipServerPort) ? settings.sipServerPort : 5060; // порты по умолчанию для SIP сервера, если не придёт из модуля _config
+            let _ws_port = (settings && settings.ws && settings.ws.port) ? settings.ws.port : 8506;
+
+            //let sip._registry = {}; // объект для хранения реально подключившихся пользователей, а не всех зарегистрированных
+            sip._realm = require('ip').address();
+            logger.info('starting server ...');
+            logger.info('SIP порт: ' + _port);
+
+            _ws_port ? logger.info('WebSocket started on port: ' + _ws_port) :
+                logger.info('WebSocket doesn\'t connect');
+
+            let options = {
+                port: _port,
+                ws_port: _ws_port,
+                ws_path: '/sip',
+
+                logger: {
+                    recv: function(msg, remote) {
+                        logger.info('RECV from ' + remote.protocol + ' ' + remote.address + ':' + remote.port + '\n' + sip.stringify(msg), 'sip');
+
+                        // посылаем сообщение, когда встретится метод 'CANCEL', т.к. этот метод не отдаётся обработчику событий-методов
+
+                        // TODO: перенести сюда код функции makeMsgCancel из модуля processing, а лучше, наверное, вызвать метод sip._detail (из 700.js)
+                        if (msg.method === 'CANCEL' && app) {
+                            // msg = makeMsgCancel(msg);
+                            app.emit('callEvent', msg);
+                        }
+                    },
+                    send: function(msg, target) {
+                        logger.info('SEND to ' + target.protocol + ' ' + target.address + ':' + target.port + '\n' + sip.stringify(msg), 'sip');
+                    },
+                    error: function(e) {
+                        logger.error(e.stack, 'sip');
+                    }
+                }
+            };
+
+            // Подключение сертификата
+            let keyPath = __dirname + '/' + 'server_localhost.key';
+            let crtPath = __dirname + '/' + 'server_localhost.crt';
+
+            if (fs.existsSync(keyPath) && fs.existsSync(crtPath)) {
+                options['tls'] = {
+                    key: fs.readFileSync(keyPath),
+                    cert: fs.readFileSync(crtPath)
+                };
+            }
+            proxy.start(options, onRequest); // end proxy.start ...
+
+            sip._port = _port;
+
+            logger.info('Server started on ' + sip._realm + ':' + sip._port); // Simple proxy server with registrar function.
+
+            loadRules(); // загрузка правил обработки SIP
         }
 
         /**
@@ -186,70 +248,8 @@ module.exports.SipServer = class SipServer extends eventEmitter {
          * @private
          */
         function eventsProcessing() {
-            ProxyStart();
+            // ProxyStart();
 
-        }
-
-        /**
-         * запуск SIP сервера
-         * @method ProxyStart
-         * @private
-         */
-        function ProxyStart() {
-
-            //logger.trace(Array.isArray(sip._accounts));
-
-            //let sip._registry = {}; // объект для хранения реально подключившихся пользователей, а не всех зарегистрированных
-            sip._realm = require('ip').address();
-            logger.info('starting server ...');
-            logger.info('SIP порт: ' + _port);
-
-            _ws_port ? logger.info('WebSocket started on port: ' + _ws_port) :
-                logger.info('WebSocket doesn\'t connect');
-
-            let options = {
-                port: _port,
-                ws_port: _ws_port,
-                ws_path: '/sip',
-
-                logger: {
-                    recv: function(msg, remote) {
-                        logger.info('RECV from ' + remote.protocol + ' ' + remote.address + ':' + remote.port + '\n' + sip.stringify(msg), 'sip');
-
-                        // посылаем сообщение, когда встретится метод 'CANCEL', т.к. этот метод не отдаётся обработчику событий-методов
-
-                        // TODO: перенести сюда код функции makeMsgCancel из модуля processing, а лучше, наверное, вызвать метод sip._detail (из 700.js)
-                        if (msg.method === 'CANCEL' && app) {
-                            // msg = makeMsgCancel(msg);
-                            app.emit('callEvent', msg);
-                        }
-                    },
-                    send: function(msg, target) {
-                        logger.info('SEND to ' + target.protocol + ' ' + target.address + ':' + target.port + '\n' + sip.stringify(msg), 'sip');
-                    },
-                    error: function(e) {
-                        logger.error(e.stack, 'sip');
-                    }
-                }
-            };
-
-            // Подключение сертификата
-            let keyPath = __dirname + '/' + 'server_localhost.key';
-            let crtPath = __dirname + '/' + 'server_localhost.crt';
-
-            if (fs.existsSync(keyPath) && fs.existsSync(crtPath)) {
-                options['tls'] = {
-                    key: fs.readFileSync(keyPath),
-                    cert: fs.readFileSync(crtPath)
-                };
-            }
-            proxy.start(options, onRequest); // end proxy.start ...
-
-            sip._port = _port;
-
-            logger.info('Server started on ' + sip._realm + ':' + sip._port); // Simple proxy server with registrar function.
-
-            loadRules(); // загрузка правил обработки SIP
         }
     }
 
