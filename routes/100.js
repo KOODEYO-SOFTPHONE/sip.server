@@ -54,7 +54,7 @@ module.exports = function(rq, flow, cb) {
 
             function register(err, contact) {
                 let now = new Date().getTime();
-                let expires = parseInt(rq.headers.expires) * 1000 || parseInt(rq.headers.contact[0].params.expires) * 1000 || 0;
+                let expires = ('expires' in rq.headers ? parseInt(rq.headers.expires) * 1000 : (parseInt(rq.headers.contact[0].params.expires) * 1000) ) || 0;
                 contact = rq.headers.contact && rq.headers.contact[0];
                 contact.uri = 'sip:' + user + '@' + flow.address + ':' + flow.port; //real address
 
