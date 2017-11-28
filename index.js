@@ -129,10 +129,10 @@ module.exports.SipServer = class SipServer extends eventEmitter {
                         // посылаем сообщение, когда встретится метод 'CANCEL', т.к. этот метод не отдаётся обработчику событий-методов
 
                         // TODO: перенести сюда код функции makeMsgCancel из модуля processing, а лучше, наверное, вызвать метод sip._detail (из 700.js)
-                        if (msg.method === 'CANCEL' && app) {
-                            // msg = makeMsgCancel(msg);
-                            app.emit('callEvent', msg);
-                        }
+                        // if (msg.method === 'CANCEL' && app) {
+                        //    msg = makeMsgCancel(msg);
+                        //    app.emit('callEvent', msg);
+                        //}
                     },
                     send: function(msg, target) {
                         logger.info('SEND to ' + target.protocol + ' ' + target.address + ':' + target.port + '\n' + sip.stringify(msg), 'sip');
