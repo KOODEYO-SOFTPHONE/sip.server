@@ -113,6 +113,7 @@ let settings = {
 
 let sipServerModule = require('../index.js');
 let sipServer = new sipServerModule.SipServer(settings);
+sipServer.ProxyStart();
 
 sipServer.on('INVITE', (data) => {
     logger.trace('Event Emitter INVITE ', data);
