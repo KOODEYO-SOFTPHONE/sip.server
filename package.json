@@ -3,7 +3,7 @@
     "version": "0.0.1",
     "scripts": {
         "start": "node index.js",
-        "test": "node ./tests/default_handlers.js"
+        "test": "mocha --timeout 10000"
     },
     "repository": {
         "type": "git",
@@ -13,6 +13,7 @@
         "caching": "git+https://github.com/komunikator/caching.git",
         "ip": "^1.1.5",
         "log4js": "^0.6.12",
+        "mocha": "^4.0.1",
         "node-uuid": "^1.4.8",
         "sails-disk": "^0.10.10",
         "sip": "^0.0.3",
