@@ -16,6 +16,7 @@
         "node-uuid": "^1.4.8",
         "sails-disk": "^0.10.10",
         "sip": "^0.0.3",
+        "sip_client": "git+https://github.com/komunikator/sip_client.git",
         "waterline": "^0.11.6"
     }
 }
