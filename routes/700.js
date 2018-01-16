@@ -118,11 +118,17 @@ module.exports = function(rq, flow, cb) {
                 console.error('err: ', err);
                 return;
             }
-            if (Array.isArray(data)) { 
-                data.forEach(function(item) {
-                    work(err, item);
-                });
+
+            if (data && data.length) {
+                work(err, data[ data.length - 1 ]);
             }
+
+            // Send invite all instance user
+            // if (Array.isArray(data)) { 
+            //     data.forEach(function(item) {
+            //         work(err, item);
+            //     });
+            // }
         });
     } else {
         sip._registry.get(sip._contactPrefix + user + '*', (err, data) => {
@@ -130,9 +136,16 @@ module.exports = function(rq, flow, cb) {
                 console.error('err: ', err);
                 return;
             }
-            data.forEach(function(item) {
-                work(err, item);
-            });
+            if (data && data.length) {
+                work(err, data[ data.length - 1 ]);
+            }
+
+            // Send invite all instance user
+            // if (Array.isArray(data)) { 
+            //     data.forEach(function(item) {
+            //         work(err, item);
+            //     });
+            // }
         });
     }
 };
