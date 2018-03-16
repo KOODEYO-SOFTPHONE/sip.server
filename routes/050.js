@@ -3,7 +3,7 @@
 let sip = require('sip');
 
 sip._userAgent = 'Komunikator 2.0';
-sip._allowMethods = ['INVITE', 'ACK', 'CANCEL', 'BYE', 'REGISTER', 'INFO', 'MESSAGE', 'UPDATE'];
+sip._allowMethods = ['INVITE', 'ACK', 'CANCEL', 'BYE', 'REGISTER', 'INFO', 'MESSAGE', 'UPDATE', 'OPTIONS'];
 module.exports = function(rq, flow, cb) {
     // Генерация sip сообщений
     this.emit(rq, flow);
