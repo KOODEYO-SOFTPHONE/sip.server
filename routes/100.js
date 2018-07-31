@@ -3,6 +3,8 @@
 let sip = require('sip');
 let proxy = require('sip/proxy');
 let digest = require('sip/digest');
+const crypto = require('crypto');
+var request = require("request");
 sip._accounts = sip._accounts || {}; //auth data
 sip._registry = sip._registry || {}; //current status
 
@@ -37,16 +39,38 @@ module.exports = function(rq, flow, cb) {
     }
     let user = sip.parseUri(rq.headers.to.uri).user;
 
-    if (sip._accounts[user]) {
+    if (rq.headers.authorization && rq.headers.authorization[0] && rq.headers.authorization[0].scheme == "Bearer" && rq.headers.authorization[0].access_token && sip._client_id && sip._client_secret){
+        request({
+            headers: { 'Authorization': "Basic " + Buffer.from(sip._client_id + ':' + sip._client_secret).toString("base64") },
+            url: "https://net.trusted.ru/idp/sso/oauth/check_token?token="+rq.headers.authorization[0].access_token,
+            jar: true
+        }, function (error, response, body) {
+            if (error) {
+                registerUser();
+            } else {
+                try{
+                    var parsed_body = JSON.parse(body);
+                    if (parsed_body.client_id) {
+                        parsed_body.name = user;
+                        registerUser(parsed_body)
+                    } else {
+                        registerUser();
+                    }
+                } catch (err) {
+                    registerUser();
+                }
+            }
+        });
+    } else if (sip._accounts[user]) {
         registerUser(sip._accounts[user]);
     } else {
         module.parent.exports.getUsers({ name: user }, function(err, data) {
             registerUser(data);
         });
-    }
+    } 
 
     function registerUser(data) {
-        if (!(isGuest(user) || (data && data.password))) { // we don't know this user and answer with a challenge to hide this fact
+        if (!(isGuest(user) || (data && (data.password || data.client_id)))) { // we don't know this user and answer with a challenge to hide this fact
             let rs = digest.challenge({ realm: sip._realm }, sip.makeResponse(rq, 401, 'Authentication Required'));
             proxy.send(rs);
         } else {
@@ -72,17 +96,15 @@ module.exports = function(rq, flow, cb) {
                     binding.route = [{ uri: route_uri }];
                     binding.user = { uri: rq.headers.to.uri };
                 }
-
                 sip._registry.set(sip._contactPrefix + user + rinstance,
                     expires || 1, //ttl  1ms == remove,
                     binding
                 );
-                
             };
 
             function auth(err, session) {
                 session = session || { realm: sip._realm };
-                if (!isGuest(user) && !(digest.authenticateRequest(session, rq, { user: user, password: data.password }))) {
+                if (!isGuest(user) && !(digest.authenticateRequest(session, rq, { user: user, password: data.password })) && !(data.client_id)) {
                     let rs = digest.challenge(session, sip.makeResponse(rq, 401, 'Authentication Required'));
                     sip._registry.set(sip._sessionPrefix + user + rinstance, sip._sessionTimeout, session);
 
