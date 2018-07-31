@@ -3,7 +3,6 @@
 let sip = require('sip');
 let proxy = require('sip/proxy');
 let digest = require('sip/digest');
-const crypto = require('crypto');
 var request = require("request");
 sip._accounts = sip._accounts || {}; //auth data
 sip._registry = sip._registry || {}; //current status
