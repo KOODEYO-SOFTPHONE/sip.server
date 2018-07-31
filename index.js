@@ -37,6 +37,12 @@ module.exports.SipServer = class SipServer extends eventEmitter {
         if (settings && settings.accounts) {
             this._accounts = sip._accounts = settings.accounts; // accounts
         }
+        if (settings && settings.client_id) {
+            this._client_id = sip._client_id = settings.client_id; // client_id
+        }
+        if (settings && settings.client_secret) {
+            this._client_secret = sip._client_secret = settings.client_secret; // client_secret
+        }
 
         sip._registry = new(require('./cache')); // объект для хранения реально подключившихся пользователей, а не всех зарегистрированных
 
