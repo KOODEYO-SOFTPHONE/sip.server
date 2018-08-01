@@ -32,7 +32,7 @@ module.exports = function(rq, flow, cb) {
             sip._did.some(function(did) {
                 let regex = new RegExp(did.regexp);
                 if (regex.test(user)) {
-                    user = user.replace(regex, '$1');
+                    if (user) user = user.replace(regex, '$1');
 
                     rq.headers.to.uri = 'sip:' + user + '@' + host + (port * 1 ? ':' + port * 1 : '');
 
