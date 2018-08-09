@@ -54,7 +54,7 @@ module.exports = function(rq, flow, cb) {
         if (!contact)
             return cb(false);
         cb(true);
-
+        if (flow.protocol == 'WS' && rq.method == "BYE") contact.ob = true;
         if (contact.ob) {
             if (!rq.headers.to.params.tag) {
                 let flow_uri = sip.encodeFlowUri(flow);
