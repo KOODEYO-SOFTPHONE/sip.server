@@ -104,7 +104,11 @@ module.exports = function(rq, flow, cb) {
             function auth(err, session) {
                 session = session || { realm: sip._realm };
                 if (!isGuest(user) && !(digest.authenticateRequest(session, rq, { user: user, password: data.password })) && !(data.client_id)) {
-                    let rs = digest.challenge(session, sip.makeResponse(rq, 407, 'Proxy Authentication Required'));
+                    //let rs = digest.challenge(session, sip.makeResponse(rq, 407, 'Proxy Authentication Required'));
+                    let rs = digest.challenge(session, sip.makeResponse(rq, 401, 'Unauthorized'));                                                  //if sip-server mode
+                    if (rq.headers['user-agent'].match(/yate/i))
+                        delete rs.headers[rs.status === 407 ? 'proxy-authenticate' : 'www-authenticate'][0].qop;
+                    
                     sip._registry.set(sip._sessionPrefix + user + rinstance, sip._sessionTimeout, session);
 
                     try {
