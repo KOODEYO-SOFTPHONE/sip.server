@@ -70,7 +70,7 @@ module.exports = function(rq, flow, cb) {
 
     function registerUser(data) {
         if (!(isGuest(user) || (data && (data.password || data.client_id)))) { // we don't know this user and answer with a challenge to hide this fact
-            let rs = digest.challenge({ realm: sip._realm }, sip.makeResponse(rq, 401, 'Authentication Required'));
+            let rs = digest.challenge({ realm: sip._realm }, sip.makeResponse(rq, 401, 'Unauthorized'));
             proxy.send(rs);
         } else {
             let rinstance = sip._getRinstance(rq.headers.contact && rq.headers.contact[0]);
@@ -104,7 +104,7 @@ module.exports = function(rq, flow, cb) {
             function auth(err, session) {
                 session = session || { realm: sip._realm };
                 if (!isGuest(user) && !(digest.authenticateRequest(session, rq, { user: user, password: data.password })) && !(data.client_id)) {
-                    let rs = digest.challenge(session, sip.makeResponse(rq, 401, 'Authentication Required'));
+                    let rs = digest.challenge(session, sip.makeResponse(rq, 407, 'Proxy Authentication Required'));
                     sip._registry.set(sip._sessionPrefix + user + rinstance, sip._sessionTimeout, session);
 
                     try {
