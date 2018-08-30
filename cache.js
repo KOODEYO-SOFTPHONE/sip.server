@@ -51,7 +51,7 @@ function Cache() {
         let selfCache = this;
 
         this.set = function (key, ttl, result) {
-            key = key.replace("+","");
+            //key = key.replace("+","");
             if (this.cache && this.cache[key] && this.cache[key]._timeOut)
                 clearTimeout(this.cache[key]._timeOut);
 
@@ -74,7 +74,7 @@ function Cache() {
         this.set = this.set.bind(caching.store);
 
         this.get = function(pattern, callback) {
-            pattern = pattern.replace("+","");
+            pattern = pattern.replace("+","\\+");
             let self = this;
             if (~pattern.indexOf('*')) {
                 pattern = new RegExp(pattern.replace(/\*/g, '.*'), 'g');
