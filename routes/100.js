@@ -79,9 +79,11 @@ module.exports = function(rq, flow, cb) {
                 let now = new Date().getTime();
                 let expires = ('expires' in rq.headers ? parseInt(rq.headers.expires) * 1000 : (parseInt(rq.headers.contact[0].params.expires) * 1000) ) || 0;
                 contact = rq.headers.contact && rq.headers.contact[0];
-                contact.uri = 'sip:' + user + '@' + flow.address + ':' + flow.port; //real address
+                // contact.uri = 'sip:' + user + '@' + flow.address + ':' + flow.port; //real address
+                contact.uri = sip.encodeFlowUri(flow); //real address
 
                 let ob = !!(contact && contact.params['reg-id'] && contact.params['+sip.instance']);
+
                 let binding = {
                     regDateTime: (contact && contact.regDateTime) ? contact.regDateTime : now,
                     expiresTime: now + expires,

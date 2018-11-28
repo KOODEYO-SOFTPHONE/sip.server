@@ -17,8 +17,10 @@ module.exports = function(rq, flow, cb) {
         cb(true);
         proxy.send(sip.makeResponse(rq, 404, 'User not Found'))
     };
-    if (rq._toContacts !== undefined)
+
+    if (rq._toContacts) {
         work(null, rq._toContacts);
-    else
+    } else {
         sip._registry.get(sip._contactPrefix + user + '*', work);
+    }
 }

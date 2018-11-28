@@ -44,11 +44,8 @@ sip._detail = function(rq) {
 
 module.exports = function(rq, flow, cb) {
     //основная обработка внутренних запросов
-    //self = _self;
-    //app = self.app;
-
     let user = sip.parseUri(rq.headers.to.uri).user;
-
+    
     function work(err, contact) {
         rq._toContacts = contact;
         if (!contact)
@@ -59,6 +56,7 @@ module.exports = function(rq, flow, cb) {
             if (!rq.headers.to.params.tag) {
                 let flow_uri = sip.encodeFlowUri(flow);
                 flow_uri.params.lr = null;
+
                 rq.headers.route = contact.route.concat(rq.headers.route || []);
                 rq.headers['record-route'] = [{ uri: flow_uri }].concat(contact.route, rq.headers['record-route'] || []);
             } else
@@ -68,6 +66,7 @@ module.exports = function(rq, flow, cb) {
                     && rq.headers.route[0].hostname == furi.hostname && rq.headers.route[0].user == furi.user)
                     rq.headers.route.shift();
             }
+            contact.ob = false; // Выставляем флаг ob в false, что бы при следующем INVITE не заходил в условие if (contact.ob).
         } else {
             if (rq.headers.route) {
                 let furi = sip.encodeFlowUri(flow);
@@ -90,8 +89,6 @@ module.exports = function(rq, flow, cb) {
             rq.headers.contact[0].uri = sip._maskContact(rq.headers.contact[0].uri, rq.headers.from.uri);
         //self.app.emit('callEvent', sip._detail(rq));
 
-        // console.log('Module 700.js rq: ', rq);
-
         try {
             proxy.send(rq, function(rs) {
                 //преобразование контактов ответа
@@ -102,7 +99,6 @@ module.exports = function(rq, flow, cb) {
 
                 //if (rs.status == 180 || rs.status >= 200)
                     //self.app.emit('callEvent', sip._detail(rs));
-
                 proxy.send(rs);
             });
         } catch (err) {
@@ -111,8 +107,8 @@ module.exports = function(rq, flow, cb) {
     }
 
     if (rq._toContacts !== undefined) {
-        //console.log('rq._toContacts: ', rq._toContacts);
         //work(null, rq._toContacts);
+
         sip._registry.get(sip._contactPrefix + user + '*', (err, data) => {
             if (err) {
                 console.error('err: ', err);

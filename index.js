@@ -1,7 +1,5 @@
 'use strict';
 
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-
 let log4js = require('log4js');
 log4js.configure(__dirname + '/logger.json', { reloadSecs: 300 });
 let logger = log4js.getLogger('sip_server');
@@ -9,7 +7,6 @@ let eventEmitter = require('events').EventEmitter;
 let getUsers = function(param, cb) {
     cb('Error connect to database', {});
 };
-let fs = require('fs');
 
 module.exports = {
     getUsers: getUsers
@@ -50,15 +47,6 @@ module.exports.SipServer = class SipServer extends eventEmitter {
             list = list || [];
             this.emit('updateRegistryList', list);
         }
-        // setInterval( () => {
-        //     sip._registry.get('alice' + '*', (err, data) => {
-        //         if (data) {
-        //             console.log('data.length: ', data.length);
-        //         } else {
-        //             console.log('alice data.length: 0');
-        //         }
-        //     });
-        // }, 1000);
 
         this._registry = sip._registry;
 
@@ -112,22 +100,49 @@ module.exports.SipServer = class SipServer extends eventEmitter {
         function ProxyStart(settings) {
             //logger.trace(Array.isArray(sip._accounts));
 
-            let _port = (settings && settings.sipServerPort) ? settings.sipServerPort : 5060; // порты по умолчанию для SIP сервера, если не придёт из модуля _config
-            let _ws_port = (settings && settings.ws && settings.ws.port) ? settings.ws.port : 8506;
+             // порты по умолчанию для SIP сервера, если не придёт из модуля _config
+            let udpPort = (settings && settings.sipServerPort)             ? settings.sipServerPort : 5060;
+            let tcpPort = (settings && settings.tcp && settings.tcp.port)  ? settings.tcp.port      : 5061;
+
+            let tlsPort = (settings && settings.tls && settings.tls.port)  ? settings.tls.port      : 5062;
+            let tlsKey  = (settings && settings.tls && settings.tls.key)   ? settings.tls.key       : '';
+            let tlsCert = (settings && settings.tls && settings.tls.cert)  ? settings.tls.cert      : '';
+
+            let wsPort  = (settings && settings.ws && settings.ws.port)    ? settings.ws.port       : 8506;
+            let wssPort = (settings && settings.ws && settings.ws.wssport) ? settings.ws.wssport    : 8507;
+            let wssKey  = (settings && settings.ws && settings.ws.key)     ? settings.ws.key        : '';
+            let wssCert = (settings && settings.ws && settings.ws.cert)    ? settings.ws.cert       : '';
 
             //let sip._registry = {}; // объект для хранения реально подключившихся пользователей, а не всех зарегистрированных
             sip._realm = require('ip').address();
             logger.info('starting server ...');
-            logger.info('SIP порт: ' + _port);
-
-            _ws_port ? logger.info('WebSocket started on port: ' + _ws_port) :
-                logger.info('WebSocket doesn\'t connect');
+            logger.info('UDP порт: ' + udpPort);
+            logger.info('TCP порт: ' + tcpPort);
+            logger.info('TLS порт: ' + tlsPort);
+            logger.info('WS  порт: '  + wsPort);
+            logger.info('WSS порт: '  + wssPort);
 
             let options = {
-                port: _port,
-                ws_port: _ws_port,
+                udp: {
+                    port: udpPort
+                },
+                tcp: {
+                    port: tcpPort
+                },
+                tls: {
+                    port: tlsPort,
+                    key: tlsKey,
+                    cert: tlsCert
+                },
+                ws: {
+                    port: wsPort
+                },
+                wss: {
+                    port: wssPort,
+                    key: wssKey,
+                    cert: wssCert
+                },
                 ws_path: '/sip',
-
                 logger: {
                     recv: function(msg, remote) {
                         logger.info('RECV from ' + remote.protocol + ' ' + remote.address + ':' + remote.port + '\n' + sip.stringify(msg), 'sip');
@@ -149,19 +164,9 @@ module.exports.SipServer = class SipServer extends eventEmitter {
                 }
             };
 
-            // Подключение сертификата
-            let keyPath = __dirname + '/' + 'server_localhost.key';
-            let crtPath = __dirname + '/' + 'server_localhost.crt';
-
-            if (fs.existsSync(keyPath) && fs.existsSync(crtPath)) {
-                options['tls'] = {
-                    key: fs.readFileSync(keyPath),
-                    cert: fs.readFileSync(crtPath)
-                };
-            }
             proxy.start(options, onRequest); // end proxy.start ...
 
-            sip._port = _port;
+            sip._port = udpPort;
 
             logger.info('Server started on ' + sip._realm + ':' + sip._port); // Simple proxy server with registrar function.
 
