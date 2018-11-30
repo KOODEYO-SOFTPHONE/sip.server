@@ -16,7 +16,6 @@ module.exports.SipServer = class SipServer extends eventEmitter {
     constructor(settings) {
         super();
 
-        console.log('settings', settings);
         let self = this;
         if (settings) {
             for (let key in settings['sip']) {
