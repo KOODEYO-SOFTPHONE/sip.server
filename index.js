@@ -100,8 +100,9 @@ module.exports.SipServer = class SipServer extends eventEmitter {
         function ProxyStart(settings) {
             //logger.trace(Array.isArray(sip._accounts));
 
-             // порты по умолчанию для SIP сервера, если не придёт из модуля _config
+             // Порты по умолчанию для SIP сервера
             let udpPort = (settings && settings.sipServerPort)             ? settings.sipServerPort : 5060;
+
             let tcpPort = (settings && settings.tcp && settings.tcp.port)  ? settings.tcp.port      : 5061;
 
             let tlsPort = (settings && settings.tls && settings.tls.port)  ? settings.tls.port      : 5062;
@@ -109,11 +110,11 @@ module.exports.SipServer = class SipServer extends eventEmitter {
             let tlsCert = (settings && settings.tls && settings.tls.cert)  ? settings.tls.cert      : '';
 
             let wsPort  = (settings && settings.ws && settings.ws.port)    ? settings.ws.port       : 8506;
-            let wssPort = (settings && settings.ws && settings.ws.wssport) ? settings.ws.wssport    : 8507;
-            let wssKey  = (settings && settings.ws && settings.ws.key)     ? settings.ws.key        : '';
-            let wssCert = (settings && settings.ws && settings.ws.cert)    ? settings.ws.cert       : '';
 
-            //let sip._registry = {}; // объект для хранения реально подключившихся пользователей, а не всех зарегистрированных
+            let wssPort = (settings && settings.wss && settings.wss.port)   ? settings.wss.wssport    : 8507;
+            let wssKey  = (settings && settings.wss && settings.wss.key)    ? settings.wss.key        : '';
+            let wssCert = (settings && settings.wss && settings.wss.cert)   ? settings.wss.cert       : '';
+
             sip._realm = require('ip').address();
             logger.info('starting server ...');
             logger.info('UDP порт: ' + udpPort);

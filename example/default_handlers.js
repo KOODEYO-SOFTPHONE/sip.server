@@ -41,10 +41,6 @@ let settings = {
         '9': {
             user: '9',
             password: '9'
-        },
-        'alice': {
-            user: 'alice',
-            password: 'alice'
         }
     },
     udp: {
@@ -57,22 +53,36 @@ let settings = {
         port: 5062
     },
     ws: {
-        port: 8506,
-        wssport: 8507
+        port: 8506
+    },
+    wss: {
+        port: 8507,
+        key: 'server_localhost.key',
+        cert: 'server_localhost.crt'
     }
 }
 
-// Подключение сертификата если есть сертификаты
-let keyPath = __dirname + '/../' + 'server_localhost.key';
-let crtPath = __dirname + '/../' + 'server_localhost.crt';
+// Чтение сертификатов сертификата
+settings['tls']['key'] = getCertificate(settings.tls.key);
+settings['tls']['cert'] = getCertificate(settings.tls.cert);
 
-if (fs.existsSync(keyPath) && fs.existsSync(crtPath)) {
-    let certKey = fs.readFileSync(keyPath);
-    let certCrt = fs.readFileSync(crtPath);
+settings['wss']['key'] = getCertificate(settings.tls.key);
+settings['wss']['cert'] = getCertificate(settings.tls.cert);
 
-    settings['tls']['key'] = settings['ws']['key'] = certKey;
-    settings['tls']['cert'] = settings['ws']['cert'] = certCrt;
-};
+function getCertificate(keyPath, crtPath) {
+    let key = '';
+    let cert = '';
+
+    if (fs.existsSync(keyPath) && fs.existsSync(crtPath)) {
+        key = fs.readFileSync(keyPath); 
+        cert = fs.readFileSync(crtPath);
+    }
+
+    return { 
+        key: key,
+        cert: cert
+    };
+}
 
 let sipServer = new sipServerModule.SipServer(settings);
 sipServer.ProxyStart(settings);
