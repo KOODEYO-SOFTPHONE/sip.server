@@ -50,7 +50,9 @@ let settings = {
         port: 5061
     },
     tls: {
-        port: 5062
+        port: 5062,
+        key: 'server_localhost.key',
+        cert: 'server_localhost.crt'
     },
     ws: {
         port: 8506
@@ -63,11 +65,13 @@ let settings = {
 }
 
 // Чтение сертификатов сертификата
-settings['tls']['key'] = getCertificate(settings.tls.key);
-settings['tls']['cert'] = getCertificate(settings.tls.cert);
+let sslTls = getCertificate(settings.tls.key, settings.tls.cert);
+settings['tls']['key'] = sslTls['key'];
+settings['tls']['cert'] = sslTls['cert'];
 
-settings['wss']['key'] = getCertificate(settings.tls.key);
-settings['wss']['cert'] = getCertificate(settings.tls.cert);
+let sslWss = getCertificate(settings.wss.key, settings.wss.cert);
+settings['wss']['key'] = sslWss['key'];
+settings['wss']['cert'] = sslWss['cert'];
 
 function getCertificate(keyPath, crtPath) {
     let key = '';
