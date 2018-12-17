@@ -4,9 +4,27 @@ let log4js = require('log4js');
 log4js.configure(__dirname + '/logger.json', { reloadSecs: 300 });
 let logger = log4js.getLogger('sip_server');
 let eventEmitter = require('events').EventEmitter;
+let fs = require('fs');
 let getUsers = function(param, cb) {
     cb('Error connect to database', {});
 };
+
+function getCertificate(keyPath, crtPath) {
+    let key = '';
+    let cert = '';
+
+    if (fs.existsSync(keyPath) && fs.existsSync(crtPath)) {
+        key = fs.readFileSync(keyPath); 
+        cert = fs.readFileSync(crtPath);
+    } else {
+        logger.debug('Not found SSL Certificate ' + keyPath + ' ' + crtPath);
+    }
+
+    return { 
+        key: key,
+        cert: cert
+    };
+}
 
 module.exports = {
     getUsers: getUsers
@@ -108,12 +126,22 @@ module.exports.SipServer = class SipServer extends eventEmitter {
             let tlsPort = (settings && settings.tls && settings.tls.port)  ? settings.tls.port      : 5062;
             let tlsKey  = (settings && settings.tls && settings.tls.key)   ? settings.tls.key       : '';
             let tlsCert = (settings && settings.tls && settings.tls.cert)  ? settings.tls.cert      : '';
+            if ( (tlsKey && (typeof tlsKey) == 'string') && (tlsCert && (typeof tlsCert) == 'string') ) {
+                let tls = getCertificate(tlsKey, tlsCert);
+                tlsKey = tls['key'];
+                tlsCert = tls['cert'];
+            }
 
             let wsPort  = (settings && settings.ws && settings.ws.port)    ? settings.ws.port       : 8506;
 
             let wssPort = (settings && settings.wss && settings.wss.port)   ? settings.wss.wssport    : 8507;
             let wssKey  = (settings && settings.wss && settings.wss.key)    ? settings.wss.key        : '';
             let wssCert = (settings && settings.wss && settings.wss.cert)   ? settings.wss.cert       : '';
+            if ( (wssKey && (typeof wssKey) == 'string') && (wssCert && (typeof wssCert) == 'string') ) {
+                let wss = getCertificate(wssKey, wssCert);
+                wssKey = wss['key'];
+                wssCert = wss['cert'];
+            }
 
             sip._realm = require('ip').address();
             logger.info('starting server ...');
@@ -122,7 +150,7 @@ module.exports.SipServer = class SipServer extends eventEmitter {
             logger.info('TLS порт: ' + tlsPort);
             logger.info('WS  порт: '  + wsPort);
             logger.info('WSS порт: '  + wssPort);
-
+            
             let options = {
                 udp: {
                     port: udpPort
