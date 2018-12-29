@@ -74,15 +74,17 @@ module.exports = function(rq, flow, cb) {
                     rq.headers.route.shift();
             }
             //real contact
-            rq.uri = contact.contact.uri;
+            // rq.uri = contact.contact.uri;
         }
-        rq.uri = contact.contact.uri;
+        // console.warn('700.js contact.contact.uri', contact.contact.uri);
+        // console.warn('700.js sip.connection', contact.contact.connection);
+        rq.uri = contact.contact.connection;
 
         //jssip incorrect uri hack
-        if (flow.protocol && flow.protocol.toUpperCase() == 'WS' && (rq.method == 'ACK' || rq.method == 'BYE')) {
+        //if (flow.protocol && flow.protocol.toUpperCase() == 'WS' && (rq.method == 'ACK' || rq.method == 'BYE')) {
             //rq.uri = rq.headers.to.uri;
-            rq.uri = contact.contact.uri;
-        }
+            //rq.uri = contact.contact.uri;
+        //}
 
         //преобразование контактов запроса
         if (rq.headers.contact)
@@ -115,16 +117,20 @@ module.exports = function(rq, flow, cb) {
                 return;
             }
 
-            if (data && data.length) {
-                work(err, data[ data.length - 1 ]);
-            }
+            // if (data && data.length) {
+            //     work(err, data[ data.length - 1 ]);
+            // }
+
+            // console.warn('rq =', rq);
+
 
             // Send invite all instance user
-            // if (Array.isArray(data)) { 
-            //     data.forEach(function(item) {
-            //         work(err, item);
-            //     });
-            // }
+            if (Array.isArray(data)) { 
+                data.forEach(function(item) {
+                    // console.warn('item', item);
+                    work(err, item);
+                });
+            }
         });
     } else {
         sip._registry.get(sip._contactPrefix + user + '*', (err, data) => {
@@ -132,16 +138,18 @@ module.exports = function(rq, flow, cb) {
                 console.error('err: ', err);
                 return;
             }
-            if (data && data.length) {
-                work(err, data[ data.length - 1 ]);
-            }
+            // if (data && data.length) {
+            //     work(err, data[ data.length - 1 ]);
+            // }
 
             // Send invite all instance user
-            // if (Array.isArray(data)) { 
-            //     data.forEach(function(item) {
-            //         work(err, item);
-            //     });
-            // }
+            // console.warn('700.js data.length =', data.length);
+
+            if (Array.isArray(data)) { 
+                data.forEach(function(item) {
+                    work(err, item);
+                });
+            }
         });
     }
 };

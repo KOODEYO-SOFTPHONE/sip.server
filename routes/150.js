@@ -12,7 +12,6 @@ sip._dialogID = function(rq) {
 
 // маршрутизация через шлюзы (используется sip._dialogs)
 module.exports = function(rq, flow, cb) {
-
     // check if it's an in dialog request
     if ((!rq.headers) || (!rq.headers.to.params.tag))
         return cb(false);
@@ -26,7 +25,8 @@ module.exports = function(rq, flow, cb) {
         return cb(false);
     cb(true);
 
-    rq.uri = contact; //real contact
+    //rq.uri = contact; //real contact
+    rq.uri = contact.contact.connection;
 
     //for correct routing requests
     if (rq.headers.route)
