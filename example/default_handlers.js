@@ -41,6 +41,10 @@ let settings = {
         '9': {
             user: '9',
             password: '9'
+        },
+        'alice': {
+            user: 'alice',
+            password: 'alice'
         }
     },
     udp: {

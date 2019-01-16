@@ -78,7 +78,8 @@ module.exports = function(rq, flow, cb) {
         }
         // console.warn('700.js contact.contact.uri', contact.contact.uri);
         // console.warn('700.js sip.connection', contact.contact.connection);
-        rq.uri = contact.contact.connection;
+        rq.uri = contact.contact.uri;
+        //rq.uri = contact.contact.connection;
 
         //jssip incorrect uri hack
         //if (flow.protocol && flow.protocol.toUpperCase() == 'WS' && (rq.method == 'ACK' || rq.method == 'BYE')) {

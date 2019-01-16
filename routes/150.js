@@ -25,8 +25,9 @@ module.exports = function(rq, flow, cb) {
         return cb(false);
     cb(true);
 
-    //rq.uri = contact; //real contact
-    rq.uri = contact.contact.connection;
+    // rq.uri = contact; //real contact
+    // rq.uri = contact.contact.connection;
+    rq.uri = contact.contact.uri;
 
     //for correct routing requests
     if (rq.headers.route)
