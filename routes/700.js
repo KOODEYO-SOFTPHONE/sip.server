@@ -47,11 +47,12 @@ module.exports = function(rq, flow, cb) {
     let user = sip.parseUri(rq.headers.to.uri).user;
     
     function work(err, contact) {
+        let flow = sip.decodeFlowUri(contact.contact.uri);
         rq._toContacts = contact;
         if (!contact)
             return cb(false);
         cb(true);
-        if (flow.protocol == 'WS' && rq.method == "BYE") contact.ob = true;
+        //if (flow.protocol == 'WS' && rq.method == "BYE") contact.ob = true;
         if (contact.ob) {
             if (!rq.headers.to.params.tag) {
                 let flow_uri = sip.encodeFlowUri(flow);
@@ -78,8 +79,9 @@ module.exports = function(rq, flow, cb) {
         }
         // console.warn('700.js contact.contact.uri', contact.contact.uri);
         // console.warn('700.js sip.connection', contact.contact.connection);
-        rq.uri = contact.contact.uri;
-        //rq.uri = contact.contact.connection;
+
+        //rq.uri = contact.contact.uri;      // Работают звонки между sip.client и mars. Не работают звонки между 2xsip.client
+        rq.uri = contact.contact.connection; // Работают звонки между 2xsip.client. Не работают звонки между sip.client и mars
 
         //jssip incorrect uri hack
         //if (flow.protocol && flow.protocol.toUpperCase() == 'WS' && (rq.method == 'ACK' || rq.method == 'BYE')) {
@@ -109,21 +111,12 @@ module.exports = function(rq, flow, cb) {
         }
     }
 
-    if (rq._toContacts !== undefined) {
-        //work(null, rq._toContacts);
 
         sip._registry.get(sip._contactPrefix + user + '*', (err, data) => {
             if (err) {
                 console.error('err: ', err);
                 return;
             }
-
-            // if (data && data.length) {
-            //     work(err, data[ data.length - 1 ]);
-            // }
-
-            // console.warn('rq =', rq);
-
 
             // Send invite all instance user
             if (Array.isArray(data)) { 
@@ -133,24 +126,5 @@ module.exports = function(rq, flow, cb) {
                 });
             }
         });
-    } else {
-        sip._registry.get(sip._contactPrefix + user + '*', (err, data) => {
-            if (err) {
-                console.error('err: ', err);
-                return;
-            }
-            // if (data && data.length) {
-            //     work(err, data[ data.length - 1 ]);
-            // }
-
-            // Send invite all instance user
-            // console.warn('700.js data.length =', data.length);
-
-            if (Array.isArray(data)) { 
-                data.forEach(function(item) {
-                    work(err, item);
-                });
-            }
-        });
-    }
+   
 };

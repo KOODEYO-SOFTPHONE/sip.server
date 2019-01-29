@@ -81,9 +81,10 @@ module.exports = function(rq, flow, cb) {
                 contact = rq.headers.contact && rq.headers.contact[0];
                 // contact.uri = 'sip:' + user + '@' + flow.address + ':' + flow.port; //real address
                 contact.uri = sip.encodeFlowUri(flow); //real address
-                contact.connection = 'sip:' + user + '@' + flow.address + ':' + flow.port;
+                contact.connection = 'sip:' + user + '@' + flow.address + ':' + flow.port + ';transport=' + flow.protocol.toLowerCase();
 
-                let ob = !!(contact && contact.params['reg-id'] && contact.params['+sip.instance']);
+                //let ob = !!(contact && contact.params['reg-id'] && contact.params['+sip.instance']);
+                let ob = false;
 
                 let binding = {
                     regDateTime: (contact && contact.regDateTime) ? contact.regDateTime : now,
