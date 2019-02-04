@@ -1,20 +1,49 @@
 {
+  "_from": "git+https://github.com/komunikator/sip.server.git",
+  "_id": "sip.server@0.0.1",
+  "_inBundle": false,
+  "_integrity": "",
+  "_location": "/sip.server",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "git",
+    "raw": "sip.server@git+https://github.com/komunikator/sip.server.git",
     "name": "sip.server",
-    "version": "0.0.1",
-    "scripts": {
-        "test": "mocha --timeout 10000"
-    },
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/komunikator/sip.server"
-    },
-    "dependencies": {
-        "caching": "git+https://github.com/komunikator/caching.git",
-        "ip": "^1.1.5",
-        "log4js": "^0.6.12",
-        "node-uuid": "^1.4.8",
-        "sails-disk": "^0.10.10",
-        "sip": "git+https://github.com/komunikator/sip.js.git",
-        "waterline": "^0.11.6"
-    }
+    "escapedName": "sip.server",
+    "rawSpec": "git+https://github.com/komunikator/sip.server.git",
+    "saveSpec": "git+https://github.com/komunikator/sip.server.git",
+    "fetchSpec": "https://github.com/komunikator/sip.server.git",
+    "gitCommittish": null
+  },
+  "_requiredBy": [
+    "/",
+    "/sip.client"
+  ],
+  "_resolved": "git+https://github.com/komunikator/sip.server.git#a2e888e3b734c313a6863f89b3de78984bf8c12b",
+  "_spec": "sip.server@git+https://github.com/komunikator/sip.server.git",
+  "_where": "/home/aea-local/projects/sip.tests",
+  "bugs": {
+    "url": "https://github.com/komunikator/sip.server/issues"
+  },
+  "bundleDependencies": false,
+  "dependencies": {
+    "caching": "git+https://github.com/komunikator/caching.git",
+    "ip": "^1.1.5",
+    "log4js": "^0.6.12",
+    "node-uuid": "^1.4.8",
+    "sails-disk": "^0.10.10",
+    "sip": "git+https://github.com/komunikator/sip.js.git",
+    "waterline": "^0.11.6"
+  },
+  "deprecated": false,
+  "homepage": "https://github.com/komunikator/sip.server#readme",
+  "name": "sip.server",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/komunikator/sip.server.git"
+  },
+  "scripts": {
+    "test": "mocha --timeout 10000"
+  },
+  "version": "0.0.1"
 }
