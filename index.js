@@ -130,11 +130,11 @@ module.exports.SipServer = class SipServer extends eventEmitter {
             }
 
             let wsPort  = (settings && settings.ws && settings.ws.port)    ? settings.ws.port       : 8506;
-
-            let wssPort = (settings && settings.wss && settings.wss.port)   ? settings.wss.wssport    : 8507;
+            let wssPort = (settings && settings.wss && settings.wss.port)   ? settings.wss.port    : 8507;
             let wssKey  = (settings && settings.wss && settings.wss.key)    ? settings.wss.key        : '';
             let wssCert = (settings && settings.wss && settings.wss.cert)   ? settings.wss.cert       : '';
-            if ( (wssKey && (typeof wssKey) == 'string') && (wssCert && (typeof wssCert) == 'string') ) {
+            
+            if ((wssKey && (typeof wssKey) == 'string') && (wssCert && (typeof wssCert) == 'string') ) {
                 let wss = getCertificate(wssKey, wssCert);
                 wssKey = wss['key'];
                 wssCert = wss['cert'];
@@ -142,11 +142,11 @@ module.exports.SipServer = class SipServer extends eventEmitter {
 
             sip._realm = require('ip').address();
             logger.sipServer('starting server ...');
-            logger.sipServer('UDP порт: ' + udpPort);
-            logger.sipServer('TCP порт: ' + tcpPort);
-            logger.sipServer('TLS порт: ' + tlsPort);
-            logger.sipServer('WS  порт: '  + wsPort);
-            logger.sipServer('WSS порт: '  + wssPort);
+            logger.sipServer('UDP port: ' + udpPort);
+            logger.sipServer('TCP port: ' + tcpPort);
+            logger.sipServer('TLS port: ' + tlsPort);
+            logger.sipServer('WS  port: '  + wsPort);
+            logger.sipServer('WSS port: '  + wssPort);
             
             let options = {
                 udp: {
