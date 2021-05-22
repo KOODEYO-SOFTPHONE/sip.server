@@ -28,6 +28,7 @@
   "bundleDependencies": false,
   "dependencies": {
     "caching": "git+https://github.com/komunikator/caching.git",
+    "chalk": "^4.1.1",
     "ip": "^1.1.5",
     "log4js": "^0.6.12",
     "node-uuid": "^1.4.8",

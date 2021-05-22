@@ -1,10 +1,7 @@
-'use strict';
-
-let log4js = require('log4js');
-log4js.configure(__dirname + '/logger.json', { reloadSecs: 300 });
-let logger = log4js.getLogger('sip_server');
+let logger = require('./logger');
 let eventEmitter = require('events').EventEmitter;
 let fs = require('fs');
+
 let getUsers = function(param, cb) {
     cb('Error connect to database', {});
 };
@@ -17,7 +14,7 @@ function getCertificate(keyPath, crtPath) {
         key = fs.readFileSync(keyPath); 
         cert = fs.readFileSync(crtPath);
     } else {
-        logger.debug('Not found SSL Certificate ' + keyPath + ' ' + crtPath);
+        logger.sipServer('Not found SSL Certificate ' + keyPath + ' ' + crtPath);
     }
 
     return { 
@@ -91,7 +88,7 @@ module.exports.SipServer = class SipServer extends eventEmitter {
 
             function work(stop) { // stop - (true/false) продолжить выполенние следующего правила или нет
                 if (i && stop) {
-                    logger.debug('для ' + rq.method + ' от "' + rq.headers.from.uri + '" сработало правило "' + rules[i - 1]._name + '"');
+                    logger.sipServer('для ' + rq.method + ' от "' + rq.headers.from.uri + '" сработало правило "' + rules[i - 1]._name + '"');
                 }
                 if (stop)
                     return;
@@ -102,7 +99,7 @@ module.exports.SipServer = class SipServer extends eventEmitter {
             try {
                 work(false);
             } catch (e) {
-                logger.error(e);
+                logger.sipServer(e);
                 logger.trace(e.stack);
                 proxy.send(sip.makeResponse(rq, 500, "Server Internal Error"));
             }
@@ -144,12 +141,12 @@ module.exports.SipServer = class SipServer extends eventEmitter {
             }
 
             sip._realm = require('ip').address();
-            logger.info('starting server ...');
-            logger.info('UDP порт: ' + udpPort);
-            logger.info('TCP порт: ' + tcpPort);
-            logger.info('TLS порт: ' + tlsPort);
-            logger.info('WS  порт: '  + wsPort);
-            logger.info('WSS порт: '  + wssPort);
+            logger.sipServer('starting server ...');
+            logger.sipServer('UDP порт: ' + udpPort);
+            logger.sipServer('TCP порт: ' + tcpPort);
+            logger.sipServer('TLS порт: ' + tlsPort);
+            logger.sipServer('WS  порт: '  + wsPort);
+            logger.sipServer('WSS порт: '  + wssPort);
             
             let options = {
                 udp: {
@@ -174,7 +171,7 @@ module.exports.SipServer = class SipServer extends eventEmitter {
                 ws_path: '/sip',
                 logger: {
                     recv: function(msg, remote) {
-                        logger.info('RECV from ' + remote.protocol + ' ' + remote.address + ':' + remote.port + '\n' + sip.stringify(msg), 'sip');
+                        logger.sipServer('RECV from ' + remote.protocol + ' ' + remote.address + ':' + remote.port + '\n' + sip.stringify(msg), 'sip');
 
                         // посылаем сообщение, когда встретится метод 'CANCEL', т.к. этот метод не отдаётся обработчику событий-методов
 
@@ -185,10 +182,10 @@ module.exports.SipServer = class SipServer extends eventEmitter {
                         //}
                     },
                     send: function(msg, target) {
-                        logger.info('SEND to ' + target.protocol + ' ' + target.address + ':' + target.port + '\n' + sip.stringify(msg), 'sip');
+                        logger.sipServer('SEND to ' + target.protocol + ' ' + target.address + ':' + target.port + '\n' + sip.stringify(msg), 'sip');
                     },
                     error: function(e) {
-                        logger.error(e.stack, 'sip');
+                        logger.sipServer(e.stack, 'sip');
                     }
                 }
             };
@@ -197,7 +194,7 @@ module.exports.SipServer = class SipServer extends eventEmitter {
 
             sip._port = udpPort;
 
-            logger.info('Server started on ' + sip._realm + ':' + sip._port); // Simple proxy server with registrar function.
+            logger.sipServer('Server started on ' + sip._realm + ':' + sip._port); // Simple proxy server with registrar function.
 
             loadRules(); // загрузка правил обработки SIP
         }
@@ -215,7 +212,7 @@ module.exports.SipServer = class SipServer extends eventEmitter {
 
             let rulesPath = config['rulesPath'] || __dirname + '/routes';
             let rulesName = require('./util').getFiles(rulesPath, false);
-            logger.debug('rulesName.length: ', rulesName.length);
+            logger.sipServer('rulesName.length: ', rulesName.length);
             if (!rulesName.length)
                 return;
             rulesName.sort();
@@ -225,12 +222,12 @@ module.exports.SipServer = class SipServer extends eventEmitter {
                     if (rule instanceof Function) {
                         rule._name = ruleName.replace('.js', '');
                         rules.push(rule);
-                        logger.debug('Rule "' + ruleName + '" is loaded');
+                        logger.sipServer('Rule "' + ruleName + '" is loaded');
                     } else {
-                        logger.error('Rule "' + ruleName + '" is invalid!');
+                        logger.sipServer('Rule "' + ruleName + '" is invalid!');
                     }
                 } catch (e) {
-                    logger.error('Rule "' + ruleName + '" is invalid! ' + e);
+                    logger.sipServer('Rule "' + ruleName + '" is invalid! ' + e);
                 }
             });
         }
@@ -319,7 +316,7 @@ module.exports.SipServer = class SipServer extends eventEmitter {
 }
 
 function waterlineStorage() {
-    logger.debug('dbstorage runs...');
+    logger.sipServer('dbstorage runs...');
 
     let Waterline = require('waterline');
     let orm = new Waterline();
@@ -358,7 +355,7 @@ function waterlineStorage() {
     });
 
     module.exports.getUsers = function(param, cb) {
-        logger.debug('dbstorage.Users requested: ' + JSON.stringify(param));
+        logger.sipServer('dbstorage.Users requested: ' + JSON.stringify(param));
 
         if (models) {
             models.collections.users.findOne(param, function(err, data) {
