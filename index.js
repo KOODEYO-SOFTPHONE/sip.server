@@ -168,7 +168,7 @@ module.exports.SipServer = class SipServer extends eventEmitter {
                     key: wssKey,
                     cert: wssCert
                 },
-                ws_path: '/sip',
+                ws_path: settings.ws_path ? settings.ws_path : '/sip',
                 logger: {
                     recv: function(msg, remote) {
                         if(process.env.NODE_ENV !== 'production') {
