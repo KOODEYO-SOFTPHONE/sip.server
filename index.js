@@ -171,8 +171,9 @@ module.exports.SipServer = class SipServer extends eventEmitter {
                 ws_path: '/sip',
                 logger: {
                     recv: function(msg, remote) {
-                        logger.sipServer('RECV from ' + remote.protocol + ' ' + remote.address + ':' + remote.port + '\n' + sip.stringify(msg), 'sip');
-
+                        if(process.env.NODE_ENV !== 'production') {
+                            logger.sipServer('RECV from ' + remote.protocol + ' ' + remote.address + ':' + remote.port + '\n' + sip.stringify(msg), 'sip');
+                        }
                         // посылаем сообщение, когда встретится метод 'CANCEL', т.к. этот метод не отдаётся обработчику событий-методов
 
                         // TODO: перенести сюда код функции makeMsgCancel из модуля processing, а лучше, наверное, вызвать метод sip._detail (из 700.js)
@@ -182,10 +183,14 @@ module.exports.SipServer = class SipServer extends eventEmitter {
                         //}
                     },
                     send: function(msg, target) {
-                        logger.sipServer('SEND to ' + target.protocol + ' ' + target.address + ':' + target.port + '\n' + sip.stringify(msg), 'sip');
+                        if(process.env.NODE_ENV !== 'production') {
+                            logger.sipServer('SEND to ' + target.protocol + ' ' + target.address + ':' + target.port + '\n' + sip.stringify(msg), 'sip');
+                        }
                     },
                     error: function(e) {
-                        logger.sipServer(e.stack, 'sip');
+                        if(process.env.NODE_ENV !== 'production') {
+                            logger.sipServer(e.stack, 'sip');
+                        }
                     }
                 }
             };

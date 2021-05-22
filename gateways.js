@@ -6,7 +6,7 @@ let digest, rq, sip, util, uuid;
 sip = require('sip');
 digest = require('sip/digest');
 util = require('util');
-uuid = require('node-uuid');
+uuid = require('uuid');
 
 let app; // объявляется объект app для вывода и отправки сообщений
 let self; // объявляется объект self для логгирования по разным уровням
