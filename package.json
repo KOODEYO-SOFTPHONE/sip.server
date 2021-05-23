@@ -30,6 +30,7 @@
     "caching": "git+https://github.com/komunikator/caching.git",
     "chalk": "^4.1.1",
     "ip": "^1.1.5",
+    "request": "^2.88.2",
     "sails-disk": "^0.10.10",
     "sip": "git+https://github.com/komunikator/sip.js.git",
     "uuid": "^8.3.2",
