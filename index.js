@@ -149,7 +149,7 @@ module.exports.SipServer = class SipServer extends eventEmitter {
             logger.sipServer('WSS port: '  + wssPort);
             
             let options = {
-                hostname: settings.hostname ? settings.hostname : undefined, 
+                hostname: settings.hostname, 
                 udp: {
                     port: udpPort
                 },

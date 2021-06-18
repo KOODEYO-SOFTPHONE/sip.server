@@ -27,8 +27,10 @@
   },
   "bundleDependencies": false,
   "dependencies": {
+    "@grpc/proto-loader": "^0.6.2",
     "caching": "git+https://github.com/komunikator/caching.git",
     "chalk": "^4.1.1",
+    "grpc": "^1.24.10",
     "ip": "^1.1.5",
     "request": "^2.88.2",
     "sails-disk": "^0.10.10",

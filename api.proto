@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package ApiPackage;
+
+service Api {
+    rpc addAccount(Account) returns (Response);
+    rpc removeAccount(Account) returns (Response);
+}
+
+message Account {
+    string name = 1;
+    string password = 2;
+}
+
+message Response {
+    string message = 1;
+}

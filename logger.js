@@ -42,8 +42,12 @@ const sipServer = (...args) => {
   console.log(logTime(), process.pid, chalk.bold.blueBright('[SIP SERVER]'), ...args);
 };
 
+const Api = (...args) => {
+  console.log(logTime(), process.pid, chalk.bold.greenBright('[Api]'), ...args);
+};
+
 module.exports = {
   LOG_TYPES,
-  setLogType,
+  setLogType, Api,
   log, error, debug,sipServer
 }
