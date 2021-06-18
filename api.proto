@@ -5,11 +5,20 @@ package ApiPackage;
 service Api {
     rpc addAccount(Account) returns (Response);
     rpc removeAccount(Account) returns (Response);
+    rpc removeRegistry(Account) returns (Response);
+    rpc getAccounts(voidNoParam) returns (Accounts);
+    rpc streamAccounts(voidNoParam) returns (stream Account);
 }
 
+message voidNoParam {}
+
 message Account {
-    string name = 1;
+    string user = 1;
     string password = 2;
+}
+
+message Accounts {
+    repeated Account data = 1;
 }
 
 message Response {

@@ -306,6 +306,17 @@ module.exports.SipServer = class SipServer extends eventEmitter {
         }
     }
 
+    getAccounts() {
+        let data = [];
+        for (const key in this._accounts) {
+            if (Object.hasOwnProperty.call(this._accounts, key)) {
+                data.push(this._accounts[key])
+            }
+        }
+
+        return data;
+    }
+
     removeAccount(account) {
         if (this._accounts[account]) {
             delete this._accounts[account];

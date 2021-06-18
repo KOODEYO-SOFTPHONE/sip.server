@@ -70,21 +70,44 @@ server.bindAsync(`0.0.0.0:${port}`, grpc.ServerCredentials.createInsecure(), () 
 
 server.addService(Package.Api.service, {
     'addAccount': function (call, callback) {
-        if(call.request.name && call.request.password) {
-            sipServer.addAccount(call.request.name, {
-                user: call.request.name,
+        if(call.request.user && call.request.password) {
+            let account = sipServer.accounts[call.request.user];
+            if(account) return callback(null, { message: 'Account exists' });
+
+            sipServer.addAccount(call.request.user, {
+                user: call.request.user,
                 password: call.request.password
             }); 
-            Logger.Api(`Added account ${call.request.name}`);
+
+            Logger.Api(`Added account ${call.request.user}`);
         }
         callback(null, { message: 'success' });
     },
 
     'removeAccount': function (call, callback) {
-        if(call.request.name) {
-            sipServer.removeAccount(call.request.name);
-            Logger.Api(`Removed account ${call.request.name}`);
+        if(call.request.user) {
+            sipServer.removeAccount(call.request.user);
+            Logger.Api(`Removed account ${call.request.user}`);
         }
         callback(null, { message: 'success' });
-    }
+    },
+
+    'removeRegistry': function (call, callback) {
+        if(call.request.user) {
+            sipServer.registry.remove(call.request.user);
+            Logger.Api(`Removed account ${call.request.user} from registry`);
+        }
+        callback(null, { message: 'success' });
+    },
+
+    'getAccounts': function (call, callback) {
+        callback(null, {
+            "data": sipServer.getAccounts() 
+        });
+    },
+
+    'streamAccounts': function (call, callback) {
+        sipServer.getAccounts().forEach((account) => call.write(account));
+        call.end();
+    },
 });
